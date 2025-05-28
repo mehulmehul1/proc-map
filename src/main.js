@@ -3,14 +3,15 @@ import {
   Color, CylinderGeometry,
   RepeatWrapping, DoubleSide, BoxGeometry, Mesh, PointLight, MeshPhysicalMaterial, PerspectiveCamera,
   Scene, PMREMGenerator, PCFSoftShadowMap,
-  Vector2, TextureLoader, SphereGeometry, MeshStandardMaterial, Raycaster, Vector3
+  Vector2, TextureLoader, SphereGeometry, MeshStandardMaterial, Raycaster, Vector3, Object3D
 } from 'https://cdn.skypack.dev/three@0.137';
+import * as THREE from 'https://cdn.skypack.dev/three@0.137';
 import { OrbitControls } from 'https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls';
 import { RGBELoader } from 'https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/RGBELoader';
 import { mergeBufferGeometries } from 'https://cdn.skypack.dev/three-stdlib@2.8.5/utils/BufferGeometryUtils';
 import SimplexNoise from 'https://cdn.skypack.dev/simplex-noise@3.0.0';
 import * as CANNON from 'cannon-es';
-
+import Stats from 'stats.js';
 // envmap https://polyhaven.com/a/herkulessaulen
 
 const scene = new Scene();
@@ -18,9 +19,10 @@ scene.background = new Color("#FFEECC");
 
 const world = new CANNON.World({
   gravity: new CANNON.Vec3(0, -9.82, 0), // m/s²
-  // Do not pass solver options directly here unless it's a solver instance
 });
+world.allowSleep = true; // Allow bodies to sleep
 world.solver.iterations = 20; // Set iterations on the default solver
+world.solver.tolerance = 0.01; // Decrease solver tolerance for stricter contacts
 
 // Define a default contact material
 const defaultMaterial = new CANNON.Material("default");
@@ -28,8 +30,12 @@ const defaultContactMaterial = new CANNON.ContactMaterial(
   defaultMaterial,
   defaultMaterial,
   {
-    friction: 0.5,      // একটু ঘর্ষণ (a bit of friction)
-    restitution: 0.3    // মাঝারি প্রত্যাবর্তন (moderate restitution)
+    friction: 0.7,
+    restitution: 0.05,
+    contactEquationStiffness: 1e10, // Significantly increased for "harder" contact
+    contactEquationRelaxation: 3,
+    frictionEquationStiffness: 1e10, // Significantly increased for "harder" friction
+    frictionEquationRelaxation: 3
   }
 );
 world.defaultContactMaterial = defaultContactMaterial;
@@ -82,7 +88,22 @@ const physicalBodies = [];
 const visualMeshes = [];
 
 const allHexMeshes = []; // To store individual hex meshes for raycasting
-const hexDataMap = new Map(); // To store hex data for pathfinding: 'x,y' => { mesh, body, tileX, tileY, worldPos, baseHeight }
+const hexDataMap = new Map(); // To store hex data for pathfinding: 'x,y' => { mesh -> instanceId, tileX, tileY, worldPos, baseHeight }
+
+const TILE_X_RANGE = 40;
+const TILE_Y_RANGE = 40;
+const allHexInfo = []; // To store raw data for hexes
+const groupedInstanceData = {
+  stone: [],
+  dirt: [],
+  grass: [],
+  sand: [],
+  dirt2: []
+  // Add other types if necessary
+};
+const instancedMeshes = {}; // To store references to our InstancedMesh objects by type
+
+const dummy = new Object3D(); // Declare dummy Object3D helper here, before the loop that uses it
 
 (async function() {
   let envmapTexture = await new RGBELoader().loadAsync("assets/envmap.hdr");
@@ -98,15 +119,134 @@ const hexDataMap = new Map(); // To store hex data for pathfinding: 'x,y' => { m
     stone: await new TextureLoader().loadAsync("assets/stone.png"),
   };
 
-  const simplex = new SimplexNoise(); // optional seed as a string parameter
+  const simplex = new SimplexNoise();
 
-  for(let i = -40; i <= 40; i++) {
-    for(let j = -40; j <= 40; j++) {
+  const heightfieldMatrix = [];
+  let minI = Infinity, maxI = -Infinity, minJ = Infinity, maxJ = -Infinity;
+
+  // First pass: collect all positions and heights for the actual hex grid
+  for(let i = -TILE_X_RANGE; i <= TILE_X_RANGE; i++) {
+    for(let j = -TILE_Y_RANGE; j <= TILE_Y_RANGE; j++) {
       let position = tileToPosition(i, j);
       if(position.length() > 32) continue;
+      minI = Math.min(minI, i);
+      maxI = Math.max(maxI, i);
+      minJ = Math.min(minJ, j);
+      maxJ = Math.max(maxJ, j);
       let noise = (simplex.noise2D(i * 0.1, j * 0.1) + 1) * 0.5;
       noise = Math.pow(noise, 1.5);
-      hex(noise * MAX_HEIGHT, position, i, j, textures, envmap); // Pass textures and envmap
+      const currentHexHeight = noise * MAX_HEIGHT;
+      allHexInfo.push({ i, j, position, height: currentHexHeight });
+    }
+  }
+
+  // Determine matrix dimensions WITH PADDING (1 unit border around the actual data)
+  const paddedMinI = minI - 1;
+  const paddedMaxI = maxI + 1;
+  const paddedMinJ = minJ - 1;
+  const paddedMaxJ = maxJ + 1;
+
+  const numRows = paddedMaxJ - paddedMinJ + 1;
+  const numCols = paddedMaxI - paddedMinI + 1;
+  const veryLowHeight = -MAX_HEIGHT * 2; // A height well below any actual terrain
+
+  for (let r = 0; r < numRows; r++) {
+    heightfieldMatrix[r] = new Array(numCols).fill(veryLowHeight); // Initialize padded matrix with low height
+  }
+
+  // Populate the central part of the heightfield matrix with actual hex data
+  for (const hexInfo of allHexInfo) {
+    // Offset row and col by 1 due to padding
+    const r = hexInfo.j - paddedMinJ;
+    const c = hexInfo.i - paddedMinI;
+    if (r >= 0 && r < numRows && c >= 0 && c < numCols) { // Bounds check just in case
+        heightfieldMatrix[r][c] = hexInfo.height;
+    }
+
+    // Instance data collection remains the same, based on original hexInfo
+    const currentHeight = hexInfo.height;
+    const currentPosition = hexInfo.position;
+    const tileX = hexInfo.i;
+    const tileY = hexInfo.j;
+    let materialType = null;
+    if (currentHeight > STONE_HEIGHT) materialType = "stone";
+    else if (currentHeight > DIRT_HEIGHT) materialType = "dirt";
+    else if (currentHeight > GRASS_HEIGHT) materialType = "grass";
+    else if (currentHeight > SAND_HEIGHT) materialType = "sand";
+    else if (currentHeight > DIRT2_HEIGHT) materialType = "dirt2";
+    else continue;
+    dummy.position.set(currentPosition.x, currentHeight * 0.5, currentPosition.y);
+    const baseGeometryHeight = 1;
+    dummy.scale.set(1, currentHeight / baseGeometryHeight, 1);
+dummy.updateMatrix();
+    if (groupedInstanceData[materialType]) {
+      // Store the per-group instance ID when pushing data
+      const perGroupInstanceId = groupedInstanceData[materialType].length;
+      groupedInstanceData[materialType].push({
+        matrix: dummy.matrix.clone(),
+        tileX: tileX, tileY: tileY,
+        worldPos: currentPosition.clone(),
+        baseHeight: currentHeight,
+        perGroupInstanceId: perGroupInstanceId // Store this ID
+      });
+
+      // Populate hexDataMap
+      const mapKey = `${tileX},${tileY}`;
+      hexDataMap.set(mapKey, {
+        tileX: tileX, tileY: tileY,
+        worldPos: currentPosition.clone(),
+        baseHeight: currentHeight,
+        materialType: materialType,
+        perGroupInstanceId: perGroupInstanceId // Store for linkage
+      });
+    } else {
+      // console.warn("Unknown material type for instancing:", materialType);
+      continue;
+    }
+  }
+
+  // Create Heightfield using the PADDED matrix
+  if (heightfieldMatrix.length > 0 && heightfieldMatrix[0].length > 0 && numCols > 0 && numRows > 0) {
+    const elementSizeForHeightfield = 1.535;
+    const heightfieldShape = new CANNON.Heightfield(heightfieldMatrix, { elementSize: elementSizeForHeightfield });
+    const hfBody = new CANNON.Body({ mass: 0, material: defaultMaterial });
+    const quaternion = new CANNON.Quaternion();
+    quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+    hfBody.addShape(heightfieldShape, new CANNON.Vec3(), quaternion);
+
+    // Positioning needs to be based on the world position of the paddedMinI, paddedMinJ corner
+    const paddedMinCornerWorldPos = tileToPosition(paddedMinI, paddedMinJ);
+    const totalWidth = (numCols - 1) * elementSizeForHeightfield;
+    const totalDepth = (numRows - 1) * elementSizeForHeightfield;
+    hfBody.position.set(
+      paddedMinCornerWorldPos.x + totalWidth * 0.5,
+      0,
+      paddedMinCornerWorldPos.y + totalDepth * 0.5
+    );
+    world.addBody(hfBody);
+    // console.log("Padded Heightfield Body Added. Matrix size:", numCols, "x", numRows);
+  }
+
+  // Create InstancedMesh(es) - one for each material type
+  const baseHexGeo = new CylinderGeometry(1, 1, 1, 6, 1, false); // Unit height = 1
+
+  for (const type in groupedInstanceData) {
+    const instances = groupedInstanceData[type];
+    if (instances.length > 0) {
+      const material = hexMeshMaterial(textures[type], envmap); // Get specific material
+      const instancedHexMesh = new THREE.InstancedMesh(baseHexGeo, material, instances.length);
+      instancedHexMesh.castShadow = true;
+      instancedHexMesh.receiveShadow = true;
+      instancedHexMesh.userData.materialType = type; // For easier identification if needed
+      instancedMeshes[type] = instancedHexMesh; // Store reference to the InstancedMesh
+
+      for (let i = 0; i < instances.length; i++) {
+        instancedHexMesh.setMatrixAt(i, instances[i].matrix);
+      }
+      instancedHexMesh.instanceMatrix.needsUpdate = true;
+      scene.add(instancedHexMesh);
+      allHexMeshes.push(instancedHexMesh); // Add to list for raycasting
+      // console.log(`Created InstancedMesh for type '${type}' with ${instances.length} instances.`);
     }
   }
 
@@ -171,9 +311,20 @@ const hexDataMap = new Map(); // To store hex data for pathfinding: 'x,y' => { m
   const sphereBody = new CANNON.Body({
     mass: 5, // kg
     shape: new CANNON.Sphere(radius),
-    material: defaultMaterial
+    material: defaultMaterial,
+    angularDamping: 0.8,
+    linearDamping: 0.5, // Increased linear damping
+    collisionResponse: true,
   });
+  sphereBody.sleepSpeedLimit = 0.2; // Body will be a candidate for sleep if its speed is below this value (default 0.1)
+  sphereBody.sleepTimeLimit = 0.5;  // Body will go to sleep if it's been below sleepSpeedLimit for this duration (default 1)
   sphereBody.position.set(0, 15, 0); // m
+
+  // CCD settings for the sphere to prevent tunneling during initial fall or high speed movements
+  sphereBody.ccdSpeedThreshold = 10; // If speed is > 10 m/s, enable CCD
+  sphereBody.ccdSweptSphereRadius = radius * 0.9; // A bit smaller than actual radius
+  // sphereBody.ccdIterations = 10; // Default is 10, usually fine
+
   world.addBody(sphereBody);
 
   // Create the visual sphere
@@ -195,131 +346,201 @@ const hexDataMap = new Map(); // To store hex data for pathfinding: 'x,y' => { m
   let currentPath = []; // To store the A* path being traversed
   let currentPathIndex = 0; // To track the current segment of the path
 
+  // Variables for hex lift animation
+  let isHexLifting = false;
+  let liftedHexInfo = null; // { instancedMesh, instanceId, originalMatrix, liftStartTime, liftAmount, liftDuration }
+  const HEX_LIFT_AMOUNT = 0.5; // How much to lift the hex
+  const HEX_LIFT_DURATION = 150; // Duration for lift up, and then for lift down (total 2*duration)
+
   const mouse = new Vector2();
 
   renderer.domElement.addEventListener('mousedown', onMouseDown, false);
 
   function onMouseDown(event) {
     event.preventDefault();
-
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
-    const cameraDirection = new Vector3();
-    camera.getWorldDirection(cameraDirection);
+    // --- Start: THREE.Raycaster for InstancedMesh picking ---
+    const threeRaycaster = new Raycaster();
+    threeRaycaster.setFromCamera(mouse, camera);
+    // allHexMeshes contains all the InstancedMesh objects
+    const intersects = threeRaycaster.intersectObjects(allHexMeshes, false);
 
-    const rayFromThree = new Vector3();
-    camera.getWorldPosition(rayFromThree);
+    let finalClickedHexData = null;
 
-    const rayToThree = new Vector3();
-    rayToThree.set(mouse.x, mouse.y, 0.5); // NDC Z value between -1 and 1
-    rayToThree.unproject(camera); // Convert NDC to world coordinates
-    // Now rayToThree is a point in world space on the camera's viewing frustum that corresponds to the mouse click.
-    // For cannon-es, we need a direction and a far point.
+    if (intersects.length > 0) {
+      const intersection = intersects[0]; // Closest intersection
+      if (intersection.object.isInstancedMesh && intersection.instanceId !== undefined) {
+        const hitInstancedMesh = intersection.object;
+        const clickedInstanceId = intersection.instanceId; // This is the perGroupInstanceId
+        const materialType = hitInstancedMesh.userData.materialType;
 
-    const rayDirection = new Vector3().subVectors(rayToThree, rayFromThree).normalize();
-    const farPoint = new Vector3().addVectors(rayFromThree, rayDirection.multiplyScalar(1000)); // 1000 is a large distance
-
-    const rayFromCannon = new CANNON.Vec3(rayFromThree.x, rayFromThree.y, rayFromThree.z);
-    const rayToCannon = new CANNON.Vec3(farPoint.x, farPoint.y, farPoint.z);
-
-    const result = new CANNON.RaycastResult();
-    const rayOptions = {
-        checkCollisionResponse: true, // Check if body has collision response
-        // collisionFilterGroup: 1, // Optional: ensure ray only hits default group if you use groups
-        // collisionFilterMask: -1 // Optional: ensure ray hits everything
-    };
-
-    world.raycastClosest(rayFromCannon, rayToCannon, rayOptions, result);
-
-    if (result.hasHit) {
-      const hitBody = result.body; // This is the CANNON.Body of the hex
-      if (hitBody.userData && hitBody.userData.threeMesh) {
-        const clickedHexMesh = hitBody.userData.threeMesh;
-        if (clickedHexMesh.userData.isHexTile) {
-          // console.log("Clicked Hex Properties (via Cannon-ES Raycast):");
-          // console.log("  Tile Coordinates (X, Y):", clickedHexMesh.userData.tileX, ",", clickedHexMesh.userData.tileY);
-          // console.log("  Noise Height (generated):", clickedHexMesh.userData.noiseHeight);
-          // console.log("  Base Hex Height (geometry):", clickedHexMesh.userData.baseHexHeight);
-          // console.log("  Texture Type:", clickedHexMesh.userData.textureType);
-          // console.log("  World Position (logical):", clickedHexMesh.userData.worldPosition);
-          // console.log("  Mesh Position (actual):", clickedHexMesh.position);
-          // console.log("  Hit Cannon Body ID:", hitBody.id);
-          // console.log("  Full Mesh userData:", clickedHexMesh.userData);
-
-          // Start animation for the sphere to the clicked hex
-          if (!isSphereAnimating) {
-            const startHexCoords = getSphereCurrentHexCoords(sphereBody.position);
-            const targetHexCoords = { tileX: clickedHexMesh.userData.tileX, tileY: clickedHexMesh.userData.tileY };
-
-            if (startHexCoords) {
-              // console.log("Calculating A* path from", startHexCoords, "to", targetHexCoords);
-              currentPath = aStarPathfinding(startHexCoords, targetHexCoords); // Store the full path
-              // console.log("A* Path:", currentPath);
-
-              if (currentPath.length > 0) {
-                currentPathIndex = 0; // Start at the beginning of the path
-                // Initiate animation to the first step
-                const firstStepNode = currentPath[currentPathIndex];
-                sphereAnimationStartPos.copy(sphereBody.position);
-                const sphereRadius = sphereBody.shapes[0].radius;
-                const targetY = firstStepNode.baseHeight + sphereRadius;
-                sphereAnimationTargetPos.set(firstStepNode.worldPos.x, targetY, firstStepNode.worldPos.y); // worldPos.y is Z
-
-                isSphereAnimating = true;
-                sphereAnimationStartTime = performance.now();
-                // console.log(`Sphere animating to A* step ${currentPathIndex}: x=${firstStepNode.worldPos.x.toFixed(2)}, y=${targetY.toFixed(2)}, z=${firstStepNode.worldPos.y.toFixed(2)}`);
-              } else {
-                // console.log("A* path not found or empty.");
-                currentPath = []; // Clear path if not found
-              }
-            } else {
-              // console.log("Could not determine sphere's current hex.");
-            }
+        // Find the corresponding hex data in hexDataMap
+        for (const [key, data] of hexDataMap) {
+          if (data.materialType === materialType && data.perGroupInstanceId === clickedInstanceId) {
+            finalClickedHexData = data;
+            break;
           }
         }
-      } else {
-        // console.log("Cannon-ES Ray hit a body with no linked threeMesh or userData:", hitBody);
       }
+    }
+    // --- End: THREE.Raycaster for InstancedMesh picking ---
+
+    // Optional: CANNON.Raycaster can still be used for other things, like confirming ground height,
+    // but visual picking is now handled by THREE.Raycaster.
+    // For instance, if finalClickedHexData is found, we might still want to confirm exact Y for sphere later.
+
+    if (finalClickedHexData && !isHexLifting && !isSphereAnimating /* Prevent interference */) {
+      const { materialType, perGroupInstanceId, worldPos, baseHeight, tileX, tileY } = finalClickedHexData;
+      const targetInstancedMesh = instancedMeshes[materialType];
+
+      if (targetInstancedMesh && perGroupInstanceId !== undefined) {
+        const sphereCurrentHex = getSphereCurrentHexCoords(sphereBody.position);
+        let allowHexLift = true;
+        if (sphereCurrentHex && sphereCurrentHex.tileX === tileX && sphereCurrentHex.tileY === tileY) {
+          allowHexLift = false; // Sphere is on the clicked hex, don't lift this hex
+        }
+
+        if (allowHexLift) {
+          isHexLifting = true;
+          const originalMatrix = new THREE.Matrix4();
+          targetInstancedMesh.getMatrixAt(perGroupInstanceId, originalMatrix);
+
+          liftedHexInfo = {
+            instancedMesh: targetInstancedMesh,
+            instanceId: perGroupInstanceId,
+            originalMatrix: originalMatrix,
+            liftStartTime: performance.now(),
+            yOffset: 0
+          };
+          // console.log("Lifting hex (THREE.js-picked):", finalClickedHexData);
+        } else {
+          // console.log("Sphere is on the clicked hex, not lifting this hex visually.");
+        }
+
+        // Sphere movement logic always runs regardless of hex lift
+        const startHexCoords = getSphereCurrentHexCoords(sphereBody.position);
+        const targetHexCoords = { tileX: tileX, tileY: tileY };
+        if (startHexCoords) {
+          currentPath = aStarPathfinding(startHexCoords, targetHexCoords);
+          if (currentPath.length > 0) {
+            currentPathIndex = 0;
+            const firstStepNode = currentPath[currentPathIndex];
+            sphereAnimationStartPos.copy(sphereBody.position);
+            const sphereRadius = sphereBody.shapes[0].radius;
+
+            // CANNON Raycast to find accurate ground height for the target hex center for sphere landing
+            const targetHexWorldPos = firstStepNode.worldPos;
+            const rayFromCannonForLanding = new CANNON.Vec3(targetHexWorldPos.x, MAX_HEIGHT + sphereRadius + 5, targetHexWorldPos.y);
+            const rayToCannonForLanding = new CANNON.Vec3(targetHexWorldPos.x, -MAX_HEIGHT, targetHexWorldPos.y);
+            const cannonResultForLanding = new CANNON.RaycastResult();
+            world.raycastClosest(rayFromCannonForLanding, rayToCannonForLanding, { checkCollisionResponse: false }, cannonResultForLanding);
+
+            let targetY = firstStepNode.baseHeight + sphereRadius;
+            if (cannonResultForLanding.hasHit) {
+              targetY = cannonResultForLanding.hitPointWorld.y + sphereRadius + 0.075;
+            }
+            sphereAnimationTargetPos.set(firstStepNode.worldPos.x, targetY, firstStepNode.worldPos.y);
+            isSphereAnimating = true;
+            sphereAnimationStartTime = performance.now();
+          }
+        }
+      }
+    } else if (finalClickedHexData) {
+        // console.log("Hex identified by THREE.js raycast, but sphere/hex is already animating:", finalClickedHexData);
     } else {
-      // console.log("No hit with Cannon-ES raycast");
+      // console.log("No specific hex identified by THREE.js click.");
     }
   }
 
   renderer.setAnimationLoop(() => {
     controls.update();
+    stats.begin();
+    const time = performance.now() / 1000;
+    const currentTimeMs = performance.now();
 
-    const time = performance.now() / 1000; // seconds
+    const maxSubSteps = 10; // Maximum number of physics sub-steps per frame
     if (!lastCallTime) {
-      world.step(timeStep);
+      // For the first frame, step with a fixed small dt to initialize, or just the timeStep
+      world.step(timeStep, timeStep, maxSubSteps);
     } else {
       const dt = time - lastCallTime;
-      world.step(timeStep, dt);
+      world.step(timeStep, dt, maxSubSteps); // Pass fixed timeStep, actual deltaTime, and maxSubSteps
     }
     lastCallTime = time;
 
+    // Hex lift animation logic
+    if (isHexLifting && liftedHexInfo) {
+      const elapsedTime = currentTimeMs - liftedHexInfo.liftStartTime;
+      let liftProgress = elapsedTime / HEX_LIFT_DURATION;
+      let currentYOffset;
+
+      if (liftProgress <= 1) { // Lifting up phase
+        currentYOffset = HEX_LIFT_AMOUNT * liftProgress;
+      } else if (liftProgress <= 2) { // Moving down phase
+        currentYOffset = HEX_LIFT_AMOUNT * (1 - (liftProgress - 1));
+      } else { // Animation finished
+        currentYOffset = 0;
+        isHexLifting = false;
+        // Ensure final matrix is the original one
+        liftedHexInfo.instancedMesh.setMatrixAt(liftedHexInfo.instanceId, liftedHexInfo.originalMatrix);
+        liftedHexInfo.instancedMesh.instanceMatrix.needsUpdate = true;
+        liftedHexInfo = null;
+        // console.log("Hex restore complete");
+      }
+
+      if (liftedHexInfo) { // Check if not nullified by completion
+        const tempMatrix = liftedHexInfo.originalMatrix.clone();
+        const translation = new THREE.Vector3(0, currentYOffset, 0);
+        tempMatrix.multiply(new THREE.Matrix4().makeTranslation(translation.x, translation.y, translation.z));
+        // Instead of multiplying, we should decompose, add to Y, then recompose or directly apply to position component of matrix
+        // For simplicity with full matrix: extract position, add offset, recompose (more robust approach for complex original matrices)
+        // Decompose original matrix
+        const position = new THREE.Vector3();
+        const quaternion = new THREE.Quaternion(); // THREE is defined
+        const scale = new THREE.Vector3();
+        liftedHexInfo.originalMatrix.decompose(position, quaternion, scale);
+        position.y += currentYOffset; // Add the lift
+        const newMatrix = new THREE.Matrix4().compose(position, quaternion, scale);
+        liftedHexInfo.instancedMesh.setMatrixAt(liftedHexInfo.instanceId, newMatrix);
+        liftedHexInfo.instancedMesh.instanceMatrix.needsUpdate = true;
+      }
+    }
+
+    // Sphere animation logic (existing)
     if (isSphereAnimating) {
       const elapsedTime = performance.now() - sphereAnimationStartTime;
       let progress = elapsedTime / sphereAnimationDuration;
 
       if (progress >= 1) {
         progress = 1;
-        isSphereAnimating = false; // Current segment finished
-        sphereBody.position.copy(sphereAnimationTargetPos);
-        // console.log("Sphere animation segment finished.");
+        isSphereAnimating = false;
+        sphereBody.position.copy(sphereAnimationTargetPos); // Land at calculated target
+        sphereBody.velocity.set(0,0,0); // Stop motion completely after segment
+        sphereBody.angularVelocity.set(0,0,0);
 
-        currentPathIndex++; // Move to the next segment
+        currentPathIndex++;
         if (currentPath.length > 0 && currentPathIndex < currentPath.length) {
-          // Start animation for the next segment
           const nextStepNode = currentPath[currentPathIndex];
-          sphereAnimationStartPos.copy(sphereBody.position); // Start from current position
+          sphereAnimationStartPos.copy(sphereBody.position);
           const sphereRadius = sphereBody.shapes[0].radius;
-          const targetY = nextStepNode.baseHeight + sphereRadius;
-          sphereAnimationTargetPos.set(nextStepNode.worldPos.x, targetY, nextStepNode.worldPos.y);
 
+          // Raycast for next step's Y position
+          const nextHexWorldPos = nextStepNode.worldPos;
+          const rayFromNext = new CANNON.Vec3(nextHexWorldPos.x, MAX_HEIGHT + sphereRadius + 5, nextHexWorldPos.y);
+          const rayToNext = new CANNON.Vec3(nextHexWorldPos.x, -MAX_HEIGHT, nextHexWorldPos.y);
+          const resultNext = new CANNON.RaycastResult();
+          world.raycastClosest(rayFromNext, rayToNext, { checkCollisionResponse: false }, resultNext);
+
+          let nextTargetY = nextStepNode.baseHeight + sphereRadius;
+          if (resultNext.hasHit) {
+            nextTargetY = resultNext.hitPointWorld.y + sphereRadius + 0.075;
+          }
+
+          sphereAnimationTargetPos.set(nextStepNode.worldPos.x, nextTargetY, nextStepNode.worldPos.y);
           isSphereAnimating = true;
           sphereAnimationStartTime = performance.now();
-          // console.log(`Sphere animating to A* step ${currentPathIndex}: x=${nextStepNode.worldPos.x.toFixed(2)}, y=${targetY.toFixed(2)}, z=${nextStepNode.worldPos.y.toFixed(2)}`);
         } else {
           // console.log("Full A* path traversed.");
           currentPath = []; // Clear the path once done
@@ -340,6 +561,7 @@ const hexDataMap = new Map(); // To store hex data for pathfinding: 'x,y' => { m
     sphereMesh.quaternion.copy(sphereBody.quaternion);
 
     renderer.render(scene, camera);
+    stats.end();
   });
 })();
 
@@ -360,7 +582,7 @@ const GRASS_HEIGHT = MAX_HEIGHT * 0.5;
 const SAND_HEIGHT = MAX_HEIGHT * 0.3;
 const DIRT2_HEIGHT = MAX_HEIGHT * 0;
 
-function hex(height, position, tileX, tileY, textures, envmap) { // Added textures, envmap parameters
+function hex(height, position, tileX, tileY, textures, envmap) {
   let baseGeo = hexGeometry(height, position);
   let textureType = "";
   let finalGeo = baseGeo;
@@ -369,30 +591,29 @@ function hex(height, position, tileX, tileY, textures, envmap) { // Added textur
   // Determine material and merge additional geometries (trees, stones)
   if (height > STONE_HEIGHT) {
     textureType = "stone";
-    material = hexMeshMaterial(textures.stone, envmap); // Pass envmap
+    material = hexMeshMaterial(textures.stone, envmap);
     if (Math.random() > 0.8) {
       finalGeo = mergeBufferGeometries([finalGeo, stone(height, position)]);
     }
   } else if (height > DIRT_HEIGHT) {
     textureType = "dirt";
-    material = hexMeshMaterial(textures.dirt, envmap); // Pass envmap
+    material = hexMeshMaterial(textures.dirt, envmap);
     if (Math.random() > 0.8) {
       finalGeo = mergeBufferGeometries([finalGeo, tree(height, position)]);
     }
   } else if (height > GRASS_HEIGHT) {
     textureType = "grass";
-    material = hexMeshMaterial(textures.grass, envmap); // Pass envmap
+    material = hexMeshMaterial(textures.grass, envmap);
   } else if (height > SAND_HEIGHT) {
     textureType = "sand";
-    material = hexMeshMaterial(textures.sand, envmap); // Pass envmap
+    material = hexMeshMaterial(textures.sand, envmap);
     if (Math.random() > 0.8) {
-      // Ensure stone geometry can be added if it's a different type
       const stoneScatterGeo = stone(height, position);
       if (stoneScatterGeo) finalGeo = mergeBufferGeometries([finalGeo, stoneScatterGeo]);
     }
   } else if (height > DIRT2_HEIGHT) {
     textureType = "dirt2";
-    material = hexMeshMaterial(textures.dirt2, envmap); // Pass envmap
+    material = hexMeshMaterial(textures.dirt2, envmap);
   } else {
     return; // No hex to create
   }
@@ -411,30 +632,31 @@ function hex(height, position, tileX, tileY, textures, envmap) { // Added textur
     baseHexHeight: height // The height parameter passed to hexGeometry
   };
 
-  // Create and setup the physics body FIRST
-  const hexShape = new CANNON.Cylinder(1, 1, height, 6);
-  const hexBody = new CANNON.Body({
-    mass: 0,
-    material: defaultMaterial
-  });
-  hexBody.addShape(hexShape);
-  hexBody.position.set(position.x, height * 0.5, position.y);
-  hexBody.userData = { threeMesh: mesh }; // Link C.Body to THREE.Mesh
-  world.addBody(hexBody); // Add to world after setup
-
   // Now that hexBody is initialized, add to scene and map
   scene.add(mesh);
   allHexMeshes.push(mesh); // Add to array for raycasting
 
+  // Store hex data for pathfinding
   const mapKey = `${tileX},${tileY}`;
   hexDataMap.set(mapKey, {
     mesh: mesh,
-    body: hexBody, // Now hexBody is initialized
+    // body: hexBody, // REMOVED - No individual physics body for hexes anymore
     tileX: tileX,
     tileY: tileY,
     worldPos: position.clone(),
     baseHeight: height,
   });
+
+  // REMOVED Individual hexBody creation and linking:
+  // const hexShape = new CANNON.Cylinder(1, 1, height, 6);
+  // const hexBody = new CANNON.Body({
+  //   mass: 0,
+  //   material: defaultMaterial
+  // });
+  // hexBody.addShape(hexShape);
+  // hexBody.position.set(position.x, height * 0.5, position.y);
+  // hexBody.userData = { threeMesh: mesh }; // Link C.Body to THREE.Mesh
+  // world.addBody(hexBody); // Add to world after setup
 }
 
 // Renamed hexMesh to hexMeshMaterial to avoid confusion and return only material
@@ -640,3 +862,35 @@ function reconstructPath(targetNode) {
 }
 
 // --- End A* Pathfinding Logic ---
+
+const stats = new Stats();
+stats.showPanel(0); // 0: fps, 1: ms, 2: memory
+document.body.appendChild(stats.dom);
+
+function worldPointToHexCoords(worldPoint) {
+  let closestHexData = null;
+  let minDistanceSq = Infinity;
+  const pX = worldPoint.x;
+  const pZ = worldPoint.z; // Assuming worldPoint.z is the ground plane Z
+
+  for (const [key, hexData] of hexDataMap) {
+    // hexData.worldPos is a THREE.Vector2 where .y represents the Z in world space
+    const dx = pX - hexData.worldPos.x;
+    const dz = pZ - hexData.worldPos.y;
+    const distanceSq = dx * dx + dz * dz;
+
+    if (distanceSq < minDistanceSq) {
+      minDistanceSq = distanceSq;
+      closestHexData = hexData;
+    }
+  }
+
+  // Threshold to ensure the click is reasonably close to a hex center.
+  // The value 1.77 is based on hex spacing, (elementSize * 0.5)^2 might be more robust if elementSize is accurate.
+  // A hex cell's approximate radius is 1 (since CylinderGeometry has radius 1).
+  // So, if the hit is within roughly 1 world unit of a hex center, it's a match.
+  if (closestHexData && minDistanceSq < (1.0 * 1.0)) {
+    return { tileX: closestHexData.tileX, tileY: closestHexData.tileY };
+  }
+  return null; // No hex found within threshold
+}
