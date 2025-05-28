@@ -207,7 +207,7 @@ dummy.updateMatrix();
 
   // Create Heightfield using the PADDED matrix
   if (heightfieldMatrix.length > 0 && heightfieldMatrix[0].length > 0 && numCols > 0 && numRows > 0) {
-    const elementSizeForHeightfield = 1.535;
+    const elementSizeForHeightfield = 0.5;
     const heightfieldShape = new CANNON.Heightfield(heightfieldMatrix, { elementSize: elementSizeForHeightfield });
     const hfBody = new CANNON.Body({ mass: 0, material: defaultMaterial });
     const quaternion = new CANNON.Quaternion();
@@ -316,15 +316,13 @@ dummy.updateMatrix();
     linearDamping: 0.5, // Increased linear damping
     collisionResponse: true,
   });
-  sphereBody.sleepSpeedLimit = 0.2; // Body will be a candidate for sleep if its speed is below this value (default 0.1)
-  sphereBody.sleepTimeLimit = 0.5;  // Body will go to sleep if it's been below sleepSpeedLimit for this duration (default 1)
-  sphereBody.position.set(0, 15, 0); // m
+  sphereBody.sleepSpeedLimit = 0.2;
+  sphereBody.sleepTimeLimit = 0.5;
+  // Start the sphere just above the highest possible hex + radius + small buffer
+  sphereBody.position.set(0, MAX_HEIGHT + radius + 0.2, 0);
 
-  // CCD settings for the sphere to prevent tunneling during initial fall or high speed movements
-  sphereBody.ccdSpeedThreshold = 10; // If speed is > 10 m/s, enable CCD
-  sphereBody.ccdSweptSphereRadius = radius * 0.9; // A bit smaller than actual radius
-  // sphereBody.ccdIterations = 10; // Default is 10, usually fine
-
+  sphereBody.ccdSpeedThreshold = 10;
+  sphereBody.ccdSweptSphereRadius = radius * 0.9;
   world.addBody(sphereBody);
 
   // Create the visual sphere
@@ -337,6 +335,48 @@ dummy.updateMatrix();
   sphereMesh.castShadow = true;
   sphereMesh.receiveShadow = true;
   scene.add(sphereMesh);
+
+  // Arrays and count for additional spheres
+  const NUM_ADDITIONAL_SPHERES = 4;
+  const additionalSphereBodies = [];
+  const additionalSphereMeshes = [];
+
+  // Create additional spheres
+  for (let i = 0; i < NUM_ADDITIONAL_SPHERES; i++) {
+    const additionalRadius = radius; // Same radius for now
+    const body = new CANNON.Body({
+      mass: 5, // kg
+      shape: new CANNON.Sphere(additionalRadius),
+      material: defaultMaterial,
+      angularDamping: 0.8,
+      linearDamping: 0.5,
+      collisionResponse: true,
+    });
+    body.sleepSpeedLimit = 0.2;
+    body.sleepTimeLimit = 0.5;
+
+    // Distribute them in a circle, slightly offset from the center, at the safe height
+    const angle = (i / NUM_ADDITIONAL_SPHERES) * Math.PI * 2;
+    const xOffset = Math.cos(angle) * 4; // 4 units away
+    const zOffset = Math.sin(angle) * 4;
+    body.position.set(xOffset, MAX_HEIGHT + additionalRadius + 0.2, zOffset);
+
+    body.ccdSpeedThreshold = 10;
+    body.ccdSweptSphereRadius = additionalRadius * 0.9;
+    world.addBody(body);
+    additionalSphereBodies.push(body);
+
+    const geom = new SphereGeometry(additionalRadius);
+    const mat = new MeshStandardMaterial({
+      color: Math.random() * 0xffffff, // Random color
+      envMap: envmap,
+    });
+    const mesh = new Mesh(geom, mat);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+    additionalSphereMeshes.push(mesh);
+  }
 
   let isSphereAnimating = false;
   let sphereAnimationStartTime = 0;
@@ -352,105 +392,114 @@ dummy.updateMatrix();
   const HEX_LIFT_AMOUNT = 0.5; // How much to lift the hex
   const HEX_LIFT_DURATION = 150; // Duration for lift up, and then for lift down (total 2*duration)
 
+  const JUMP_FORCE = 30; // Magnitude of the jump impulse
+  let isRightMouseDown = false; // To track right mouse button state for single jump
+
   const mouse = new Vector2();
 
   renderer.domElement.addEventListener('mousedown', onMouseDown, false);
+  renderer.domElement.addEventListener('mouseup', onMouseUp, false); // Add mouseup listener
+  renderer.domElement.addEventListener('contextmenu', (event) => event.preventDefault()); // Prevent context menu on right click
+
+  function onMouseUp(event) {
+    if (event.button === 2) { // Right mouse button released
+      isRightMouseDown = false;
+    }
+  }
 
   function onMouseDown(event) {
     event.preventDefault();
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
-    // --- Start: THREE.Raycaster for InstancedMesh picking ---
-    const threeRaycaster = new Raycaster();
-    threeRaycaster.setFromCamera(mouse, camera);
-    // allHexMeshes contains all the InstancedMesh objects
-    const intersects = threeRaycaster.intersectObjects(allHexMeshes, false);
+    if (event.button === 0) { // Left mouse button
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
-    let finalClickedHexData = null;
+      const threeRaycaster = new Raycaster();
+      threeRaycaster.setFromCamera(mouse, camera);
+      const intersects = threeRaycaster.intersectObjects(allHexMeshes, false);
 
-    if (intersects.length > 0) {
-      const intersection = intersects[0]; // Closest intersection
-      if (intersection.object.isInstancedMesh && intersection.instanceId !== undefined) {
-        const hitInstancedMesh = intersection.object;
-        const clickedInstanceId = intersection.instanceId; // This is the perGroupInstanceId
-        const materialType = hitInstancedMesh.userData.materialType;
-
-        // Find the corresponding hex data in hexDataMap
-        for (const [key, data] of hexDataMap) {
-          if (data.materialType === materialType && data.perGroupInstanceId === clickedInstanceId) {
-            finalClickedHexData = data;
-            break;
-          }
-        }
-      }
-    }
-    // --- End: THREE.Raycaster for InstancedMesh picking ---
-
-    // Optional: CANNON.Raycaster can still be used for other things, like confirming ground height,
-    // but visual picking is now handled by THREE.Raycaster.
-    // For instance, if finalClickedHexData is found, we might still want to confirm exact Y for sphere later.
-
-    if (finalClickedHexData && !isHexLifting && !isSphereAnimating /* Prevent interference */) {
-      const { materialType, perGroupInstanceId, worldPos, baseHeight, tileX, tileY } = finalClickedHexData;
-      const targetInstancedMesh = instancedMeshes[materialType];
-
-      if (targetInstancedMesh && perGroupInstanceId !== undefined) {
-        const sphereCurrentHex = getSphereCurrentHexCoords(sphereBody.position);
-        let allowHexLift = true;
-        if (sphereCurrentHex && sphereCurrentHex.tileX === tileX && sphereCurrentHex.tileY === tileY) {
-          allowHexLift = false; // Sphere is on the clicked hex, don't lift this hex
-        }
-
-        if (allowHexLift) {
-          isHexLifting = true;
-          const originalMatrix = new THREE.Matrix4();
-          targetInstancedMesh.getMatrixAt(perGroupInstanceId, originalMatrix);
-
-          liftedHexInfo = {
-            instancedMesh: targetInstancedMesh,
-            instanceId: perGroupInstanceId,
-            originalMatrix: originalMatrix,
-            liftStartTime: performance.now(),
-            yOffset: 0
-          };
-          // console.log("Lifting hex (THREE.js-picked):", finalClickedHexData);
-        } else {
-          // console.log("Sphere is on the clicked hex, not lifting this hex visually.");
-        }
-
-        // Sphere movement logic always runs regardless of hex lift
-        const startHexCoords = getSphereCurrentHexCoords(sphereBody.position);
-        const targetHexCoords = { tileX: tileX, tileY: tileY };
-        if (startHexCoords) {
-          currentPath = aStarPathfinding(startHexCoords, targetHexCoords);
-          if (currentPath.length > 0) {
-            currentPathIndex = 0;
-            const firstStepNode = currentPath[currentPathIndex];
-            sphereAnimationStartPos.copy(sphereBody.position);
-            const sphereRadius = sphereBody.shapes[0].radius;
-
-            // CANNON Raycast to find accurate ground height for the target hex center for sphere landing
-            const targetHexWorldPos = firstStepNode.worldPos;
-            const rayFromCannonForLanding = new CANNON.Vec3(targetHexWorldPos.x, MAX_HEIGHT + sphereRadius + 5, targetHexWorldPos.y);
-            const rayToCannonForLanding = new CANNON.Vec3(targetHexWorldPos.x, -MAX_HEIGHT, targetHexWorldPos.y);
-            const cannonResultForLanding = new CANNON.RaycastResult();
-            world.raycastClosest(rayFromCannonForLanding, rayToCannonForLanding, { checkCollisionResponse: false }, cannonResultForLanding);
-
-            let targetY = firstStepNode.baseHeight + sphereRadius;
-            if (cannonResultForLanding.hasHit) {
-              targetY = cannonResultForLanding.hitPointWorld.y + sphereRadius + 0.075;
+      let finalClickedHexData = null;
+      if (intersects.length > 0) {
+        const intersection = intersects[0];
+        if (intersection.object.isInstancedMesh && intersection.instanceId !== undefined) {
+          const hitInstancedMesh = intersection.object;
+          const clickedInstanceId = intersection.instanceId;
+          const materialType = hitInstancedMesh.userData.materialType;
+          for (const [key, data] of hexDataMap) {
+            if (data.materialType === materialType && data.perGroupInstanceId === clickedInstanceId) {
+              finalClickedHexData = data;
+              break;
             }
-            sphereAnimationTargetPos.set(firstStepNode.worldPos.x, targetY, firstStepNode.worldPos.y);
-            isSphereAnimating = true;
-            sphereAnimationStartTime = performance.now();
           }
         }
       }
-    } else if (finalClickedHexData) {
+
+      if (finalClickedHexData && !isHexLifting && !isSphereAnimating) {
+        const { materialType, perGroupInstanceId, worldPos, baseHeight, tileX, tileY } = finalClickedHexData;
+        const targetInstancedMesh = instancedMeshes[materialType];
+        if (targetInstancedMesh && perGroupInstanceId !== undefined) {
+          const sphereCurrentHex = getSphereCurrentHexCoords(sphereBody.position);
+          let allowHexLift = true;
+          if (sphereCurrentHex && sphereCurrentHex.tileX === tileX && sphereCurrentHex.tileY === tileY) {
+            allowHexLift = false;
+          }
+          if (allowHexLift) {
+            isHexLifting = true;
+            const originalMatrix = new THREE.Matrix4();
+            targetInstancedMesh.getMatrixAt(perGroupInstanceId, originalMatrix);
+            liftedHexInfo = {
+              instancedMesh: targetInstancedMesh, instanceId: perGroupInstanceId,
+              originalMatrix: originalMatrix, liftStartTime: performance.now(), yOffset: 0
+            };
+          }
+          const startHexCoords = getSphereCurrentHexCoords(sphereBody.position);
+          const targetHexCoords = { tileX: tileX, tileY: tileY };
+          if (startHexCoords) {
+            currentPath = aStarPathfinding(startHexCoords, targetHexCoords);
+            if (currentPath.length > 0) {
+              currentPathIndex = 0;
+              const firstStepNode = currentPath[currentPathIndex];
+              sphereAnimationStartPos.copy(sphereBody.position);
+              const sphereRadiusInternal = sphereBody.shapes[0].radius; // Use internal for clarity
+              const targetHexWorldPos = firstStepNode.worldPos;
+              const rayFromCannonForLanding = new CANNON.Vec3(targetHexWorldPos.x, MAX_HEIGHT + sphereRadiusInternal + 5, targetHexWorldPos.y);
+              const rayToCannonForLanding = new CANNON.Vec3(targetHexWorldPos.x, -MAX_HEIGHT, targetHexWorldPos.y);
+              const cannonResultForLanding = new CANNON.RaycastResult();
+              world.raycastClosest(rayFromCannonForLanding, rayToCannonForLanding, { checkCollisionResponse: false }, cannonResultForLanding);
+              let targetY = firstStepNode.baseHeight + sphereRadiusInternal + 0.075;
+              if (cannonResultForLanding.hasHit) {
+                targetY = cannonResultForLanding.hitPointWorld.y + sphereRadiusInternal + 0.075;
+              }
+              sphereAnimationTargetPos.set(firstStepNode.worldPos.x, targetY, firstStepNode.worldPos.y);
+              isSphereAnimating = true;
+              sphereAnimationStartTime = performance.now();
+            }
+          }
+        }
+      } else if (finalClickedHexData) {
         // console.log("Hex identified by THREE.js raycast, but sphere/hex is already animating:", finalClickedHexData);
-    } else {
-      // console.log("No specific hex identified by THREE.js click.");
+      } else {
+        // console.log("No specific hex identified by THREE.js click.");
+      }
+    } else if (event.button === 2 && !isRightMouseDown) { // Right mouse button for jump
+      isRightMouseDown = true; // Prevent continuous jump if button is held
+      // Check if sphere is on the ground
+      const spherePos = sphereBody.position;
+      const rayFrom = new CANNON.Vec3(spherePos.x, spherePos.y, spherePos.z);
+      const rayTo = new CANNON.Vec3(spherePos.x, spherePos.y - radius - 0.1, spherePos.z); // Ray slightly longer than radius
+      const result = new CANNON.RaycastResult();
+      world.raycastClosest(rayFrom, rayTo, { collisionFilterGroup: 1, collisionFilterMask: 1 }, result);
+
+      if (result.hasHit && result.body !== sphereBody) { // Check if it hit something, and that it's not itself (though ray direction should prevent this)
+        // console.log("Sphere is grounded, attempting jump.");
+        sphereBody.applyImpulse(new CANNON.Vec3(0, JUMP_FORCE, 0), sphereBody.position);
+        // Wake up the sphere if it was sleeping
+        if(sphereBody.sleepState === CANNON.Body.SLEEPING) {
+          sphereBody.wakeUp();
+        }
+      } else {
+        // console.log("Sphere not grounded, cannot jump.");
+      }
     }
   }
 
@@ -559,6 +608,33 @@ dummy.updateMatrix();
 
     sphereMesh.position.copy(sphereBody.position);
     sphereMesh.quaternion.copy(sphereBody.quaternion);
+
+    // Update additional spheres and apply random movement
+    for (let i = 0; i < additionalSphereMeshes.length; i++) {
+      const body = additionalSphereBodies[i];
+      const mesh = additionalSphereMeshes[i];
+
+      if (body && mesh) {
+        mesh.position.copy(body.position);
+        mesh.quaternion.copy(body.quaternion);
+
+        // Random movement logic
+        const RANDOM_MOVEMENT_PROBABILITY = 0.005; // Adjust for more/less frequent changes
+        const RANDOM_IMPULSE_STRENGTH = 5;    // Adjust for stronger/weaker pushes
+
+        if (Math.random() < RANDOM_MOVEMENT_PROBABILITY) {
+          const randomForce = new CANNON.Vec3(
+            (Math.random() - 0.5) * 2 * RANDOM_IMPULSE_STRENGTH, // Random X
+            Math.random() * RANDOM_IMPULSE_STRENGTH * 0.2,         // Slight random Y (small hops)
+            (Math.random() - 0.5) * 2 * RANDOM_IMPULSE_STRENGTH  // Random Z
+          );
+          body.applyImpulse(randomForce, body.position); // Apply impulse at the center of the body
+          if (body.sleepState === CANNON.Body.SLEEPING) {
+            body.wakeUp();
+          }
+        }
+      }
+    }
 
     renderer.render(scene, camera);
     stats.end();
