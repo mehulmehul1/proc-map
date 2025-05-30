@@ -90,8 +90,8 @@ const visualMeshes = [];
 const allHexMeshes = []; // To store individual hex meshes for raycasting
 const hexDataMap = new Map(); // To store hex data for pathfinding: 'x,y' => { mesh -> instanceId, tileX, tileY, worldPos, baseHeight }
 
-const TILE_X_RANGE = 40;
-const TILE_Y_RANGE = 40;
+const TILE_X_RANGE = 100;
+const TILE_Y_RANGE = 100;
 const allHexInfo = []; // To store raw data for hexes
 const groupedInstanceData = {
   stone: [],
@@ -106,6 +106,8 @@ const instancedMeshes = {}; // To store references to our InstancedMesh objects 
 const dummy = new Object3D(); // Declare dummy Object3D helper here, before the loop that uses it
 
 (async function() {
+  const surfaceHeight = 3;
+
   let envmapTexture = await new RGBELoader().loadAsync("assets/envmap.hdr");
   let rt = pmrem.fromEquirectangular(envmapTexture);
   envmap = rt.texture;
@@ -128,15 +130,15 @@ const dummy = new Object3D(); // Declare dummy Object3D helper here, before the 
   for(let i = -TILE_X_RANGE; i <= TILE_X_RANGE; i++) {
     for(let j = -TILE_Y_RANGE; j <= TILE_Y_RANGE; j++) {
       let position = tileToPosition(i, j);
-      if(position.length() > 32) continue;
+      if(position.length() > 50) continue;
       minI = Math.min(minI, i);
       maxI = Math.max(maxI, i);
       minJ = Math.min(minJ, j);
       maxJ = Math.max(maxJ, j);
       let noise = (simplex.noise2D(i * 0.1, j * 0.1) + 1) * 0.5;
       noise = Math.pow(noise, 1.5);
-      const currentHexHeight = noise * MAX_HEIGHT;
-      allHexInfo.push({ i, j, position, height: currentHexHeight });
+      let currentHeight = noise * MAX_HEIGHT;
+      allHexInfo.push({ i, j, position, height: currentHeight });
     }
   }
 
@@ -160,11 +162,17 @@ const dummy = new Object3D(); // Declare dummy Object3D helper here, before the 
     const r = hexInfo.j - paddedMinJ;
     const c = hexInfo.i - paddedMinI;
     if (r >= 0 && r < numRows && c >= 0 && c < numCols) { // Bounds check just in case
-        heightfieldMatrix[r][c] = hexInfo.height;
+        // If this is a grass hex, set height to 0 in the heightfield matrix
+        let isGrass = false;
+        let tempHeight = hexInfo.height;
+        if (tempHeight > GRASS_HEIGHT && tempHeight <= DIRT_HEIGHT) {
+          isGrass = true;
+        }
+        heightfieldMatrix[r][c] = isGrass ? 0 : hexInfo.height;
     }
 
     // Instance data collection remains the same, based on original hexInfo
-    const currentHeight = hexInfo.height;
+    let currentHeight = hexInfo.height;
     const currentPosition = hexInfo.position;
     const tileX = hexInfo.i;
     const tileY = hexInfo.j;
@@ -175,6 +183,25 @@ const dummy = new Object3D(); // Declare dummy Object3D helper here, before the 
     else if (currentHeight > SAND_HEIGHT) materialType = "sand";
     else if (currentHeight > DIRT2_HEIGHT) materialType = "dirt2";
     else continue;
+    // Force all grass hexes to height 0
+    if (materialType === "grass") {
+      currentHeight = surfaceHeight;
+    }
+    if (materialType === "dirt") {
+      currentHeight = surfaceHeight;
+    }
+    if (materialType === "dirt2") {
+      currentHeight = surfaceHeight;
+    }
+    if (materialType === "sand") {
+      currentHeight = surfaceHeight - 0.2;
+    }
+    if (materialType === "stone") {
+      currentHeight = surfaceHeight + 3;
+    }
+    if (materialType === "water") {
+      currentHeight = 1;
+    }
     dummy.position.set(currentPosition.x, currentHeight * 0.5, currentPosition.y);
     const baseGeometryHeight = 1;
     dummy.scale.set(1, currentHeight / baseGeometryHeight, 1);
@@ -319,7 +346,7 @@ dummy.updateMatrix();
   sphereBody.sleepSpeedLimit = 0.2;
   sphereBody.sleepTimeLimit = 0.5;
   // Start the sphere just above the highest possible hex + radius + small buffer
-  sphereBody.position.set(0, MAX_HEIGHT + radius + 0.2, 0);
+  sphereBody.position.set(0, Math.max(MAX_HEIGHT + radius + 0.2, surfaceHeight), 0);
 
   sphereBody.ccdSpeedThreshold = 10;
   sphereBody.ccdSweptSphereRadius = radius * 0.9;
@@ -327,11 +354,11 @@ dummy.updateMatrix();
 
   // Create the visual sphere
   const sphereGeometry = new SphereGeometry(radius);
-  const sphereMaterial = new MeshStandardMaterial({
+  const baseSphereMaterial = new MeshStandardMaterial({
     color: 0xff0000,
     envMap: envmap,
   });
-  const sphereMesh = new Mesh(sphereGeometry, sphereMaterial);
+  const sphereMesh = new Mesh(sphereGeometry, baseSphereMaterial.clone());
   sphereMesh.castShadow = true;
   sphereMesh.receiveShadow = true;
   scene.add(sphereMesh);
@@ -359,19 +386,16 @@ dummy.updateMatrix();
     const angle = (i / NUM_ADDITIONAL_SPHERES) * Math.PI * 2;
     const xOffset = Math.cos(angle) * 4; // 4 units away
     const zOffset = Math.sin(angle) * 4;
-    body.position.set(xOffset, MAX_HEIGHT + additionalRadius + 0.2, zOffset);
+    body.position.set(xOffset, Math.max(MAX_HEIGHT + additionalRadius + 0.2, surfaceHeight), zOffset);
 
     body.ccdSpeedThreshold = 10;
     body.ccdSweptSphereRadius = additionalRadius * 0.9;
     world.addBody(body);
     additionalSphereBodies.push(body);
 
-    const geom = new SphereGeometry(additionalRadius);
-    const mat = new MeshStandardMaterial({
-      color: Math.random() * 0xffffff, // Random color
-      envMap: envmap,
-    });
-    const mesh = new Mesh(geom, mat);
+    // Use the same geometry and material as the red ball, but random color
+    const mesh = new Mesh(sphereGeometry, baseSphereMaterial.clone());
+    mesh.material.color.setHex(Math.random() * 0xffffff);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     scene.add(mesh);
@@ -565,7 +589,9 @@ dummy.updateMatrix();
       if (progress >= 1) {
         progress = 1;
         isSphereAnimating = false;
-        sphereBody.position.copy(sphereAnimationTargetPos); // Land at calculated target
+        // Clamp sphere Y to surfaceHeight
+        let clampedY = Math.max(sphereAnimationTargetPos.y, surfaceHeight);
+        sphereBody.position.set(sphereAnimationTargetPos.x, clampedY, sphereAnimationTargetPos.z); // Land at calculated target
         sphereBody.velocity.set(0,0,0); // Stop motion completely after segment
         sphereBody.angularVelocity.set(0,0,0);
 
@@ -597,7 +623,8 @@ dummy.updateMatrix();
         }
       } else {
         const newX = sphereAnimationStartPos.x + (sphereAnimationTargetPos.x - sphereAnimationStartPos.x) * progress;
-        const newY = sphereAnimationStartPos.y + (sphereAnimationTargetPos.y - sphereAnimationStartPos.y) * progress;
+        let newY = sphereAnimationStartPos.y + (sphereAnimationTargetPos.y - sphereAnimationStartPos.y) * progress;
+        newY = Math.max(newY, surfaceHeight);
         const newZ = sphereAnimationStartPos.z + (sphereAnimationTargetPos.z - sphereAnimationStartPos.z) * progress;
         sphereBody.position.set(newX, newY, newZ);
       }
@@ -607,7 +634,17 @@ dummy.updateMatrix();
     }
 
     sphereMesh.position.copy(sphereBody.position);
-    sphereMesh.quaternion.copy(sphereBody.quaternion);
+    // Clamp sphere visual y to the top of the hex it is over
+    const sphereHex = getSphereCurrentHexCoords(sphereBody.position);
+    if (sphereHex) {
+      const hexNode = getHexNode(sphereHex.tileX, sphereHex.tileY);
+      if (hexNode) {
+        const topY = hexNode.baseHeight + radius;
+        if (sphereMesh.position.y < topY) {
+          sphereMesh.position.y = topY;
+        }
+      }
+    }
 
     // Update additional spheres and apply random movement
     for (let i = 0; i < additionalSphereMeshes.length; i++) {
@@ -617,6 +654,18 @@ dummy.updateMatrix();
       if (body && mesh) {
         mesh.position.copy(body.position);
         mesh.quaternion.copy(body.quaternion);
+
+        // Clamp additional ball y to at least surfaceHeight and top of hex
+        const ballHex = getSphereCurrentHexCoords(body.position);
+        if (ballHex) {
+          const hexNode = getHexNode(ballHex.tileX, ballHex.tileY);
+          if (hexNode) {
+            const topY = Math.max(surfaceHeight, hexNode.baseHeight + radius);
+            if (mesh.position.y < topY) {
+              mesh.position.y = topY;
+            }
+          }
+        }
 
         // Random movement logic
         const RANDOM_MOVEMENT_PROBABILITY = 0.005; // Adjust for more/less frequent changes
@@ -656,7 +705,7 @@ const STONE_HEIGHT = MAX_HEIGHT * 0.8;
 const DIRT_HEIGHT = MAX_HEIGHT * 0.7;
 const GRASS_HEIGHT = MAX_HEIGHT * 0.5;
 const SAND_HEIGHT = MAX_HEIGHT * 0.3;
-const DIRT2_HEIGHT = MAX_HEIGHT * 0;
+const DIRT2_HEIGHT = MAX_HEIGHT * 0.15;
 
 function hex(height, position, tileX, tileY, textures, envmap) {
   let baseGeo = hexGeometry(height, position);
