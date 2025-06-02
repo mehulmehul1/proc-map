@@ -115,7 +115,11 @@ const dummy = new Object3D(); // Declare dummy Object3D helper here, before the 
   let textures = {
     dirt: await new TextureLoader().loadAsync("assets/dirt.png"),
     dirt2: await new TextureLoader().loadAsync("assets/dirt2.jpg"),
-    grass: await new TextureLoader().loadAsync("assets/grass.jpg"),
+    grass: [
+      await new TextureLoader().loadAsync("assets/grass1-albedo3.png"),
+      await new TextureLoader().loadAsync("assets/grass.jpg")
+    ],
+    grassNormal: await new TextureLoader().loadAsync("assets/grass1-normal1-dx.png"),
     sand: await new TextureLoader().loadAsync("assets/sand.jpg"),
     water: await new TextureLoader().loadAsync("assets/water.jpg"),
     stone: await new TextureLoader().loadAsync("assets/stone.png"),
@@ -156,26 +160,39 @@ const dummy = new Object3D(); // Declare dummy Object3D helper here, before the 
     heightfieldMatrix[r] = new Array(numCols).fill(veryLowHeight); // Initialize padded matrix with low height
   }
 
-  // Populate the central part of the heightfield matrix with actual hex data
+  // LAYER 1: Assign all as grass
   for (const hexInfo of allHexInfo) {
-    // Offset row and col by 1 due to padding
-    const r = hexInfo.j - paddedMinJ;
-    const c = hexInfo.i - paddedMinI;
-    if (r >= 0 && r < numRows && c >= 0 && c < numCols) { // Bounds check just in case
-        // If this is a grass hex, set height to 0 in the heightfield matrix
-        let isGrass = false;
-        let tempHeight = hexInfo.height;
-        if (tempHeight > GRASS_HEIGHT && tempHeight <= DIRT_HEIGHT) {
-          isGrass = true;
-        }
-        heightfieldMatrix[r][c] = isGrass ? 0 : hexInfo.height;
-    }
-
-    // Instance data collection remains the same, based on original hexInfo
-    let currentHeight = hexInfo.height;
     const currentPosition = hexInfo.position;
     const tileX = hexInfo.i;
     const tileY = hexInfo.j;
+    const currentHeight = hexInfo.height;
+    const perGroupInstanceId = groupedInstanceData.grass.length;
+    dummy.position.set(currentPosition.x, surfaceHeight * 0.5, currentPosition.y);
+    dummy.scale.set(1, surfaceHeight / 1, 1);
+    dummy.updateMatrix();
+    groupedInstanceData.grass.push({
+      matrix: dummy.matrix.clone(),
+      tileX, tileY,
+      worldPos: currentPosition.clone(),
+      baseHeight: surfaceHeight,
+      perGroupInstanceId
+    });
+    const mapKey = `${tileX},${tileY}`;
+    hexDataMap.set(mapKey, {
+      tileX, tileY,
+      worldPos: currentPosition.clone(),
+      baseHeight: surfaceHeight,
+      materialType: 'grass',
+      perGroupInstanceId
+    });
+  }
+
+  // LAYER 2+: Overwrite with dirt, stone, etc. based on height
+  for (const hexInfo of allHexInfo) {
+    const currentPosition = hexInfo.position;
+    const tileX = hexInfo.i;
+    const tileY = hexInfo.j;
+    let currentHeight = hexInfo.height;
     let materialType = null;
     if (currentHeight > STONE_HEIGHT) materialType = "stone";
     else if (currentHeight > DIRT_HEIGHT) materialType = "dirt";
@@ -183,54 +200,40 @@ const dummy = new Object3D(); // Declare dummy Object3D helper here, before the 
     else if (currentHeight > SAND_HEIGHT) materialType = "sand";
     else if (currentHeight > DIRT2_HEIGHT) materialType = "dirt2";
     else continue;
-    // Force all grass hexes to height 0
-    if (materialType === "grass") {
-      currentHeight = surfaceHeight;
-    }
-    if (materialType === "dirt") {
-      currentHeight = surfaceHeight;
-    }
-    if (materialType === "dirt2") {
-      currentHeight = surfaceHeight;
-    }
-    if (materialType === "sand") {
-      currentHeight = surfaceHeight - 0.2;
-    }
-    if (materialType === "stone") {
-      currentHeight = surfaceHeight + 3;
-    }
-    if (materialType === "water") {
-      currentHeight = 1;
-    }
-    dummy.position.set(currentPosition.x, currentHeight * 0.5, currentPosition.y);
-    const baseGeometryHeight = 1;
-    dummy.scale.set(1, currentHeight / baseGeometryHeight, 1);
-dummy.updateMatrix();
-    if (groupedInstanceData[materialType]) {
-      // Store the per-group instance ID when pushing data
+    // Only overwrite if not grass
+    if (materialType !== 'grass') {
+      let baseHeight = surfaceHeight;
+      if (materialType === "dirt") baseHeight = surfaceHeight;
+      if (materialType === "dirt2") baseHeight = surfaceHeight;
+      if (materialType === "sand") baseHeight = surfaceHeight - 0.2;
+      if (materialType === "stone") baseHeight = surfaceHeight + 3;
+      dummy.position.set(currentPosition.x, baseHeight * 0.5, currentPosition.y);
+      dummy.scale.set(1, baseHeight / 1, 1);
+      dummy.updateMatrix();
       const perGroupInstanceId = groupedInstanceData[materialType].length;
       groupedInstanceData[materialType].push({
         matrix: dummy.matrix.clone(),
-        tileX: tileX, tileY: tileY,
+        tileX, tileY,
         worldPos: currentPosition.clone(),
-        baseHeight: currentHeight,
-        perGroupInstanceId: perGroupInstanceId // Store this ID
+        baseHeight,
+        perGroupInstanceId
       });
-
-      // Populate hexDataMap
+      // Remove from grass group (set to null, will be filtered out later)
+      const grassIdx = groupedInstanceData.grass.findIndex(g => g && g.tileX === tileX && g.tileY === tileY);
+      if (grassIdx !== -1) groupedInstanceData.grass[grassIdx] = null;
+      // Update hexDataMap
       const mapKey = `${tileX},${tileY}`;
       hexDataMap.set(mapKey, {
-        tileX: tileX, tileY: tileY,
+        tileX, tileY,
         worldPos: currentPosition.clone(),
-        baseHeight: currentHeight,
-        materialType: materialType,
-        perGroupInstanceId: perGroupInstanceId // Store for linkage
+        baseHeight,
+        materialType,
+        perGroupInstanceId
       });
-    } else {
-      // console.warn("Unknown material type for instancing:", materialType);
-      continue;
     }
   }
+  // Clean up nulls from grass group
+  groupedInstanceData.grass = groupedInstanceData.grass.filter(Boolean);
 
   // Create Heightfield using the PADDED matrix
   if (heightfieldMatrix.length > 0 && heightfieldMatrix[0].length > 0 && numCols > 0 && numRows > 0) {
@@ -260,20 +263,40 @@ dummy.updateMatrix();
   for (const type in groupedInstanceData) {
     const instances = groupedInstanceData[type];
     if (instances.length > 0) {
-      const material = hexMeshMaterial(textures[type], envmap); // Get specific material
+      let material;
+      if (type === "grass") {
+        // Create a material for each grass texture
+        const grassMaterials = textures.grass.map(tex => hexMeshMaterial(tex, envmap, textures.grassNormal));
+        // Create an InstancedMesh with the first material, then assign per-instance materialIndex
+        const instancedHexMesh = new THREE.InstancedMesh(baseHexGeo, grassMaterials[0], instances.length);
+        instancedHexMesh.castShadow = true;
+        instancedHexMesh.receiveShadow = true;
+        instancedHexMesh.userData.materialType = type;
+        instancedMeshes[type] = instancedHexMesh;
+        for (let i = 0; i < instances.length; i++) {
+          instancedHexMesh.setMatrixAt(i, instances[i].matrix);
+          // Randomly assign a material index (0 or 1)
+          instancedHexMesh.setColorAt && instancedHexMesh.setColorAt(i, new THREE.Color(1, 1, 1)); // keep color
+          instancedHexMesh.material = grassMaterials[Math.floor(Math.random() * grassMaterials.length)];
+        }
+        instancedHexMesh.instanceMatrix.needsUpdate = true;
+        scene.add(instancedHexMesh);
+        allHexMeshes.push(instancedHexMesh);
+        continue;
+      } else {
+        material = hexMeshMaterial(textures[type], envmap);
+      }
       const instancedHexMesh = new THREE.InstancedMesh(baseHexGeo, material, instances.length);
       instancedHexMesh.castShadow = true;
       instancedHexMesh.receiveShadow = true;
-      instancedHexMesh.userData.materialType = type; // For easier identification if needed
-      instancedMeshes[type] = instancedHexMesh; // Store reference to the InstancedMesh
-
+      instancedHexMesh.userData.materialType = type;
+      instancedMeshes[type] = instancedHexMesh;
       for (let i = 0; i < instances.length; i++) {
         instancedHexMesh.setMatrixAt(i, instances[i].matrix);
       }
       instancedHexMesh.instanceMatrix.needsUpdate = true;
       scene.add(instancedHexMesh);
-      allHexMeshes.push(instancedHexMesh); // Add to list for raycasting
-      // console.log(`Created InstancedMesh for type '${type}' with ${instances.length} instances.`);
+      allHexMeshes.push(instancedHexMesh);
     }
   }
 
@@ -701,7 +724,7 @@ function hexGeometry(height, position) {
   return geo;
 }
 
-const STONE_HEIGHT = MAX_HEIGHT * 0.8;
+const STONE_HEIGHT = MAX_HEIGHT * 0.97;
 const DIRT_HEIGHT = MAX_HEIGHT * 0.7;
 const GRASS_HEIGHT = MAX_HEIGHT * 0.5;
 const SAND_HEIGHT = MAX_HEIGHT * 0.3;
@@ -785,13 +808,18 @@ function hex(height, position, tileX, tileY, textures, envmap) {
 }
 
 // Renamed hexMesh to hexMeshMaterial to avoid confusion and return only material
-function hexMeshMaterial(map, envmap) { // Added envmap parameter
-  return new MeshPhysicalMaterial({
-    envMap: envmap, // Use passed envmap
+function hexMeshMaterial(map, envmap, normalMap) {
+  const matParams = {
+    envMap: envmap,
     envMapIntensity: 0.135,
     flatShading: true,
     map
-  });
+  };
+  if (normalMap) {
+    matParams.normalMap = normalMap;
+    matParams.normalScale = new THREE.Vector2(1, 1); // You can tweak this for effect
+  }
+  return new MeshPhysicalMaterial(matParams);
 }
 
 function tree(height, position) {
