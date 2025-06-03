@@ -6,7 +6,7 @@ import { ACESFilmicToneMapping, sRGBEncoding, PCFSoftShadowMap, PMREMGenerator }
 import {
     PHYSICS_SOLVER_ITERATIONS, PHYSICS_SOLVER_TOLERANCE,
     FRICTION, RESTITUTION
-} from './config.js';
+} from './config.ts';
 
 export function initCore() {
     const scene = new THREE.Scene();

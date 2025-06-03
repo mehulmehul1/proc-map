@@ -14,4 +14,4 @@ export const PHYSICS_SOLVER_ITERATIONS = 20;
 export const PHYSICS_SOLVER_TOLERANCE = 0.01;
 export const FRICTION = 0.7;
 export const RESTITUTION = 0.05;
-// ... any other constants
+// Add any additional constants here

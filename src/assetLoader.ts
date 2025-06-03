@@ -1,12 +1,12 @@
 // assetLoader.js
-import * as THREE from 'https://cdn.skypack.dev/three@0.137';
-import { RGBELoader } from 'https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/RGBELoader';
-import { TextureLoader } from 'https://cdn.skypack.dev/three@0.137';
+import * as THREE from 'three';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { TextureLoader } from 'three';
 
-export async function loadAssets(pmrem) {
-    const envmapTexture = await new RGBELoader().loadAsync("assets/envmap.hdr");
-    const rt = pmrem.fromEquirectangular(envmapTexture);
-    const envmap = rt.texture;
+export async function loadAssets(pmrem: { fromEquirectangular: (arg0: THREE.DataTexture) => any; }) {
+    const envmapTexture: THREE.DataTexture = await new RGBELoader().loadAsync("assets/envmap.hdr");
+    const rt: THREE.WebGLRenderTarget = pmrem.fromEquirectangular(envmapTexture);
+    const envmap: THREE.Texture = rt.texture;
 
     const textures = {
         dirt: await new TextureLoader().loadAsync("assets/dirt.png"),

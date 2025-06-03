@@ -1,27 +1,49 @@
-// animation.js
-import * as THREE from 'https://cdn.skypack.dev/three@0.137';
+// animation.ts
+import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import { HEX_LIFT_AMOUNT, HEX_LIFT_DURATION, SPHERE_ANIMATION_DURATION, MAX_HEIGHT } from './config.js';
-import { worldPointToHex } from './pathfinding.js'; // For getting current hex of sphere
+import { HEX_LIFT_AMOUNT, HEX_LIFT_DURATION, SPHERE_ANIMATION_DURATION, MAX_HEIGHT } from './config.ts';
+import { worldPointToHex } from './pathfinding.ts'; // For getting current hex of sphere
 
-// --- State Variables for Animations (managed by main.js or passed in) ---
-// These would typically be part of a larger state object or managed by the calling module (main.js)
-// let isHexLifting = false;
-// let liftedHexInfo = null; // { instancedMesh, instanceId, originalMatrix, liftStartTime, yOffset }
-// let isSphereAnimating = false;
-// let sphereAnimationStartTime = 0;
-// let sphereAnimationStartPos = new CANNON.Vec3();
-// let sphereAnimationTargetPos = new CANNON.Vec3();
-// let currentPath = [];
-// let currentPathIndex = 0;
-// ---
+interface LiftedHexInfo {
+    instancedMesh: THREE.InstancedMesh;
+    instanceId: number;
+    originalMatrix: THREE.Matrix4;
+    liftStartTime: number;
+    yOffset: number;
+}
 
-export function updateHexLiftAnimation(currentTimeMs, animationState, instancedMeshes) {
+interface AnimationState {
+    isHexLifting: boolean;
+    liftedHexInfo: LiftedHexInfo | null;
+    isSphereAnimating: boolean;
+    sphereAnimationStartTime: number;
+    sphereAnimationStartPos: CANNON.Vec3;
+    sphereAnimationTargetPos: CANNON.Vec3;
+    currentPath: any[]; // Replace 'any' with your path node type
+    currentPathIndex: number;
+}
+
+interface HexData {
+    materialType: string;
+    perGroupInstanceId: number;
+    worldPos: THREE.Vector2;
+    baseHeight: number;
+}
+
+interface InstancedMeshes {
+    [key: string]: THREE.InstancedMesh;
+}
+
+export function updateHexLiftAnimation(
+    currentTimeMs: number, 
+    animationState: AnimationState, 
+    instancedMeshes: InstancedMeshes
+): void {
     if (!animationState.isHexLifting || !animationState.liftedHexInfo) return;
     const { liftedHexInfo } = animationState;
     const elapsedTime = currentTimeMs - liftedHexInfo.liftStartTime;
     let liftProgress = elapsedTime / HEX_LIFT_DURATION;
-    let currentYOffset;
+    let currentYOffset: number;
 
     if (liftProgress <= 1) { // Lifting up
         currentYOffset = HEX_LIFT_AMOUNT * liftProgress;
@@ -38,7 +60,6 @@ export function updateHexLiftAnimation(currentTimeMs, animationState, instancedM
 
     // Apply lift by modifying the matrix (decompose, translate, compose is safer)
     const position = new THREE.Vector3();
-    console.log(position)
     const quaternion = new THREE.Quaternion();
     const scale = new THREE.Vector3();
     liftedHexInfo.originalMatrix.decompose(position, quaternion, scale);
@@ -48,13 +69,17 @@ export function updateHexLiftAnimation(currentTimeMs, animationState, instancedM
     liftedHexInfo.instancedMesh.instanceMatrix.needsUpdate = true;
 }
 
-
-export function updateSpherePathAnimation(world, animationState, sphereBody, hexDataMap) {
+export function updateSpherePathAnimation(
+    world: CANNON.World, 
+    animationState: AnimationState, 
+    sphereBody: CANNON.Body, 
+    hexDataMap: Map<string, HexData>
+): void {
     if (!animationState.isSphereAnimating) return;
 
     const elapsedTime = performance.now() - animationState.sphereAnimationStartTime;
     let progress = elapsedTime / SPHERE_ANIMATION_DURATION;
-    const sphereRadius = sphereBody.shapes[0].radius;
+    const sphereRadius = (sphereBody.shapes[0] as CANNON.Sphere).radius;
 
     if (progress >= 1) {
         progress = 1;
@@ -119,8 +144,11 @@ export function updateSpherePathAnimation(world, animationState, sphereBody, hex
     }
 }
 
-export function startHexLift(clickedHexData, instancedMeshes, animationState) {
-
+export function startHexLift(
+    clickedHexData: HexData, 
+    instancedMeshes: InstancedMeshes, 
+    animationState: AnimationState
+): void {
     const targetInstancedMesh = instancedMeshes[clickedHexData.materialType];
     if (targetInstancedMesh && clickedHexData.perGroupInstanceId !== undefined) {
         animationState.isHexLifting = true;
@@ -136,11 +164,17 @@ export function startHexLift(clickedHexData, instancedMeshes, animationState) {
     }
 }
 
-export function startSpherePath(world, path, sphereBody, animationState, hexDataMap) {
+export function startSpherePath(
+    world: CANNON.World, 
+    path: any[], // Replace 'any' with your path node type
+    sphereBody: CANNON.Body, 
+    animationState: AnimationState, 
+    hexDataMap: Map<string, HexData>
+): void {
     animationState.currentPath = path;
     animationState.currentPathIndex = 0;
     const firstStepNode = animationState.currentPath[0];
-    const sphereRadius = sphereBody.shapes[0].radius;
+    const sphereRadius = (sphereBody.shapes[0] as CANNON.Sphere).radius;
 
     animationState.sphereAnimationStartPos.copy(sphereBody.position);
 
