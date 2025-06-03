@@ -18,7 +18,6 @@ import { worldPointToHex } from './pathfinding.js'; // For getting current hex o
 
 export function updateHexLiftAnimation(currentTimeMs, animationState, instancedMeshes) {
     if (!animationState.isHexLifting || !animationState.liftedHexInfo) return;
-
     const { liftedHexInfo } = animationState;
     const elapsedTime = currentTimeMs - liftedHexInfo.liftStartTime;
     let liftProgress = elapsedTime / HEX_LIFT_DURATION;
@@ -39,6 +38,7 @@ export function updateHexLiftAnimation(currentTimeMs, animationState, instancedM
 
     // Apply lift by modifying the matrix (decompose, translate, compose is safer)
     const position = new THREE.Vector3();
+    console.log(position)
     const quaternion = new THREE.Quaternion();
     const scale = new THREE.Vector3();
     liftedHexInfo.originalMatrix.decompose(position, quaternion, scale);
@@ -59,7 +59,14 @@ export function updateSpherePathAnimation(world, animationState, sphereBody, hex
     if (progress >= 1) {
         progress = 1;
         animationState.isSphereAnimating = false;
-        sphereBody.position.copy(animationState.sphereAnimationTargetPos);
+        
+        // Ensure final position Y is not below 0
+        const finalY = Math.max(0, animationState.sphereAnimationTargetPos.y);
+        sphereBody.position.set(
+            animationState.sphereAnimationTargetPos.x,
+            finalY,
+            animationState.sphereAnimationTargetPos.z
+        );
         sphereBody.velocity.set(0, 0, 0);
         sphereBody.angularVelocity.set(0, 0, 0);
 
@@ -75,9 +82,9 @@ export function updateSpherePathAnimation(world, animationState, sphereBody, hex
             const result = new CANNON.RaycastResult();
             world.raycastClosest(rayFrom, rayTo, { checkCollisionResponse: false }, result);
             
-            let nextTargetY = nextStepNode.baseHeight + sphereRadius + 0.075; // Default target Y
+            let nextTargetY = Math.max(0, nextStepNode.baseHeight + sphereRadius + 0.075); // Ensure Y is not below 0
             if (result.hasHit) {
-                nextTargetY = result.hitPointWorld.y + sphereRadius + 0.075; // More precise Y
+                nextTargetY = Math.max(0, result.hitPointWorld.y + sphereRadius + 0.075); // Ensure Y is not below 0
             }
 
             animationState.sphereAnimationTargetPos.set(nextStepNode.worldPos.x, nextTargetY, nextStepNode.worldPos.y);
@@ -86,25 +93,34 @@ export function updateSpherePathAnimation(world, animationState, sphereBody, hex
         } else {
             animationState.currentPath = [];
             animationState.currentPathIndex = 0;
-            // Optional: Make sphere dynamic again if needed
-            // sphereBody.type = CANNON.Body.DYNAMIC;
-            // sphereBody.wakeUp();
+            // Make sphere dynamic again and ensure it's awake
+            sphereBody.type = CANNON.Body.DYNAMIC;
+            sphereBody.wakeUp();
+            // Set initial velocity to zero to prevent falling
+            sphereBody.velocity.set(0, 0, 0);
+            sphereBody.angularVelocity.set(0, 0, 0);
         }
     } else {
+        // During animation, keep sphere kinematic
+        sphereBody.type = CANNON.Body.KINEMATIC;
         // Interpolate position
         const newX = animationState.sphereAnimationStartPos.x + (animationState.sphereAnimationTargetPos.x - animationState.sphereAnimationStartPos.x) * progress;
         let newY = animationState.sphereAnimationStartPos.y + (animationState.sphereAnimationTargetPos.y - animationState.sphereAnimationStartPos.y) * progress;
-        // newY = Math.max(newY, sphereRadius); // Ensure not below ground if surfaceHeight isn't well defined
         const newZ = animationState.sphereAnimationStartPos.z + (animationState.sphereAnimationTargetPos.z - animationState.sphereAnimationStartPos.z) * progress;
+        
+        // Ensure Y is not below 2 during animation
+        newY = Math.max(2, newY);
+
         sphereBody.position.set(newX, newY, newZ);
 
-        // Keep sphere kinematic during animation
+        // Keep velocities at zero during animation
         sphereBody.velocity.set(0, 0, 0);
         sphereBody.angularVelocity.set(0, 0, 0);
     }
 }
 
 export function startHexLift(clickedHexData, instancedMeshes, animationState) {
+
     const targetInstancedMesh = instancedMeshes[clickedHexData.materialType];
     if (targetInstancedMesh && clickedHexData.perGroupInstanceId !== undefined) {
         animationState.isHexLifting = true;

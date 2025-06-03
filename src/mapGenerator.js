@@ -29,9 +29,11 @@ export function createMap(scene, world, loadedMapData, textures, envmap, default
                 console.warn(`Material type "${materialType}" from JSON not pre-defined. Adding dynamically.`);
                 groupedInstanceData[materialType] = [];
                  if (!textures[materialType]) {
-                    console.error(`CRITICAL: Texture for dynamically added material type "${materialType}" is missing.`);
+                    console.error(`CRITICAL---: Texture for dynamically added material type "${materialType}" is missing.`);
+                    
                     // Potentially default to a known type or skip
-                    // materialType = "grass"; // Example fallback
+                    materialType = "stone"; // Example fallback
+                    
                 }
             }
 
@@ -150,9 +152,11 @@ export function createMap(scene, world, loadedMapData, textures, envmap, default
                 // or use a shader that can select textures.
             } else if (textures[type]) {
                  material = createHexMaterial(textures[type], envmap);
+             
             } else {
                 console.warn(`No texture found for material type: ${type}. Skipping InstancedMesh creation.`);
-                continue;
+                material = createHexMaterial(textures["sand"], envmap); // adding hardcoded texture if not found
+                // continue;
             }
 
             const instancedHexMesh = new THREE.InstancedMesh(baseHexGeo, material, instances.length);

@@ -36,16 +36,23 @@ async function main() {
     core = initCore();
     assets = await loadAssets(core.pmrem);
 
+    console.log(assets)
+
     createMap(core.scene, core.world, assets.loadedMapData, assets.textures, assets.envmap, core.defaultMaterial);
 
     allPhysicalSpheres = createSpheres(core.scene, core.world, assets.envmap, core.defaultMaterial);
     playerSphere = allPhysicalSpheres.find(s => s.isPlayer); // Get the player sphere
+
+    console.log(allPhysicalSpheres, "allPhysicalSpheres")
+
 
     // Pass necessary state and objects to interaction setup
     setupMouseControls(core.renderer.domElement, core.camera, core.world, allHexMeshes, hexDataMap, mapInstancedMeshes, playerSphere, animationState);
 
     core.renderer.setAnimationLoop(animate);
 }
+
+let prevFloorY;
 
 function animate() {
     stats.begin();
@@ -70,24 +77,38 @@ function animate() {
 
 
     // Sync visual meshes with physics bodies for all spheres
-    const surfaceHeight = 0; // Define a minimum surface height if needed for clamping
+    const surfaceHeight = 3; // Define a minimum surface height if needed for clamping
     const sphereRadius = playerSphere ? playerSphere.body.shapes[0].radius : 1; // Get radius dynamically or use default
 
     allPhysicalSpheres.forEach(sphereObj => {
-        sphereObj.mesh.position.copy(sphereObj.body.position);
+      let floorY = surfaceHeight; // Default floor
+      const currentHex = worldPointToHex(sphereObj.body.position, hexDataMap);
+   
+      if(prevFloorY){
+        floorY = prevFloorY
+      }
+        if (currentHex) {
+            floorY = currentHex.baseHeight; // Height of the hex's surface
+        } 
+
+      const visualYMinimum = floorY + sphereRadius;
+      
+      let sphereBodyPosition = sphereObj.body.position;
+      sphereObj.mesh.position.y =  sphereObj.mesh.position.y < visualYMinimum ? visualYMinimum : sphereObj.mesh.position.y;
+      sphereBodyPosition.y = sphereBodyPosition.y < visualYMinimum ? visualYMinimum : sphereBodyPosition.y;  // Set y position to 10 units
+
+    
+        sphereObj.mesh.position.copy(sphereBodyPosition);
         sphereObj.mesh.quaternion.copy(sphereObj.body.quaternion);
 
         // Visual clamping for player and additional spheres
-        const currentHex = worldPointToHex(sphereObj.body.position, hexDataMap);
-        let floorY = surfaceHeight; // Default floor
-        if (currentHex) {
-            floorY = currentHex.baseHeight; // Height of the hex's surface
-        }
+
         
         // Ensure visual mesh y is at least radius above its hex or surfaceHeight
-        const visualYMinimum = floorY + sphereRadius;
+
+
         if (sphereObj.mesh.position.y < visualYMinimum && !animationState.isSphereAnimating) { // Don't clamp during path animation
-             // sphereObj.mesh.position.y = visualYMinimum; //This was causing visual jitter for falling spheres.
+             sphereObj.mesh.position.y =  sphereObj.mesh.position.y < visualYMinimum ? visualYMinimum : sphereObj.mesh.position.y; //This was causing visual jitter for falling spheres.
                                                     // Physics should handle collision and visual just follows.
                                                     // Clamping for purely visual elements might be ok.
         }
