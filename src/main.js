@@ -41,7 +41,7 @@ const defaultContactMaterial = new CANNON.ContactMaterial(
 world.defaultContactMaterial = defaultContactMaterial;
 
 const camera = new PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 1000);
-camera.position.set(-17,31,33);
+camera.position.set(-25.5, 46.5, 49.5); // Zoomed out camera position
 
 const renderer = new WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
@@ -63,7 +63,7 @@ light.shadow.camera.far = 500;
 scene.add( light );
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0,0,0);
+controls.target.set(20,0,20);
 controls.dampingFactor = 0.05;
 controls.enableDamping = true;
 
@@ -125,25 +125,60 @@ const dummy = new Object3D(); // Declare dummy Object3D helper here, before the 
     stone: await new TextureLoader().loadAsync("assets/stone.png"),
   };
 
-  const simplex = new SimplexNoise();
+  // Load map data from JSON
+  const mapDataResponse = await fetch("assets/gettysburg_map_data.json"); // Changed file name
+  const loadedMapData = await mapDataResponse.json();
 
   const heightfieldMatrix = [];
   let minI = Infinity, maxI = -Infinity, minJ = Infinity, maxJ = -Infinity;
 
-  // First pass: collect all positions and heights for the actual hex grid
-  for(let i = -TILE_X_RANGE; i <= TILE_X_RANGE; i++) {
-    for(let j = -TILE_Y_RANGE; j <= TILE_Y_RANGE; j++) {
-      let position = tileToPosition(i, j);
-      if(position.length() > 50) continue;
-      minI = Math.min(minI, i);
-      maxI = Math.max(maxI, i);
-      minJ = Math.min(minJ, j);
-      maxJ = Math.max(maxJ, j);
-      let noise = (simplex.noise2D(i * 0.1, j * 0.1) + 1) * 0.5;
-      noise = Math.pow(noise, 1.5);
-      let currentHeight = noise * MAX_HEIGHT;
-      allHexInfo.push({ i, j, position, height: currentHeight });
+  // Process loadedMapData to populate allHexInfo and determine grid extents
+  allHexInfo.length = 0; // Clear existing procedural data if any
+
+  if (loadedMapData && loadedMapData.hex_data) { // Check if hex_data exists
+    for (const tile of loadedMapData.hex_data) { // Iterate over hex_data
+      const coords = tile.coord.split(',');
+      const tileX = parseInt(coords[0], 10);
+      const tileY = parseInt(coords[1], 10);
+      const position = tileToPosition(tileX, tileY);
+
+      // Map terrain to materialType and elevation to height
+      // Ensure all terrain types are valid keys in groupedInstanceData and textures
+      let materialType = tile.terrain;
+      if (!groupedInstanceData[materialType]) {
+        console.warn(`Material type "${materialType}" not pre-defined in groupedInstanceData. Defaulting to 'grass'. Add texture and entry if needed.`);
+        if (!textures[materialType]) { // Also check if texture is missing for this new type
+            console.warn(`Texture for "${materialType}" is missing. Rendering will likely fail for this type.`);
+        }
+        // To prevent errors, you might default to a known type or skip this tile
+        // For now, let's try to add it to groupedInstanceData dynamically if it's a new terrain type from JSON
+        // This assumes textures object already has (or will have) this new materialType
+        groupedInstanceData[materialType] = [];
+      }
+
+
+      allHexInfo.push({
+        i: tileX,
+        j: tileY,
+        position: position,
+        height: tile.elevation, // Use elevation from JSON
+        materialType: materialType // Use terrain from JSON as materialType
+      });
+      minI = Math.min(minI, tileX);
+      maxI = Math.max(maxI, tileX);
+      minJ = Math.min(minJ, tileY);
+      maxJ = Math.max(maxJ, tileY);
     }
+  } else {
+    console.error("Failed to load hex_data from gettysburg_map_data.json or it's missing.");
+  }
+
+  // If loadedMapData is empty, fallback to a minimal default (e.g., one grass tile)
+  if (allHexInfo.length === 0) {
+    console.warn("Map data is empty or failed to load. Creating a default tile.");
+    const defaultTile = { i: 0, j: 0, position: tileToPosition(0,0), height: surfaceHeight, materialType: "grass" };
+    allHexInfo.push(defaultTile);
+    minI = 0; maxI = 0; minJ = 0; maxJ = 0;
   }
 
   // Determine matrix dimensions WITH PADDING (1 unit border around the actual data)
@@ -160,80 +195,62 @@ const dummy = new Object3D(); // Declare dummy Object3D helper here, before the 
     heightfieldMatrix[r] = new Array(numCols).fill(veryLowHeight); // Initialize padded matrix with low height
   }
 
-  // LAYER 1: Assign all as grass
+  // This loop populates the physics heightfield matrix
   for (const hexInfo of allHexInfo) {
-    const currentPosition = hexInfo.position;
-    const tileX = hexInfo.i;
-    const tileY = hexInfo.j;
-    const currentHeight = hexInfo.height;
-    const perGroupInstanceId = groupedInstanceData.grass.length;
-    dummy.position.set(currentPosition.x, surfaceHeight * 0.5, currentPosition.y);
-    dummy.scale.set(1, surfaceHeight / 1, 1);
-    dummy.updateMatrix();
-    groupedInstanceData.grass.push({
-      matrix: dummy.matrix.clone(),
-      tileX, tileY,
-      worldPos: currentPosition.clone(),
-      baseHeight: surfaceHeight,
-      perGroupInstanceId
-    });
-    const mapKey = `${tileX},${tileY}`;
-    hexDataMap.set(mapKey, {
-      tileX, tileY,
-      worldPos: currentPosition.clone(),
-      baseHeight: surfaceHeight,
-      materialType: 'grass',
-      perGroupInstanceId
-    });
-  }
-
-  // LAYER 2+: Overwrite with dirt, stone, etc. based on height
-  for (const hexInfo of allHexInfo) {
-    const currentPosition = hexInfo.position;
-    const tileX = hexInfo.i;
-    const tileY = hexInfo.j;
-    let currentHeight = hexInfo.height;
-    let materialType = null;
-    if (currentHeight > STONE_HEIGHT) materialType = "stone";
-    else if (currentHeight > DIRT_HEIGHT) materialType = "dirt";
-    else if (currentHeight > GRASS_HEIGHT) materialType = "grass";
-    else if (currentHeight > SAND_HEIGHT) materialType = "sand";
-    else if (currentHeight > DIRT2_HEIGHT) materialType = "dirt2";
-    else continue;
-    // Only overwrite if not grass
-    if (materialType !== 'grass') {
-      let baseHeight = surfaceHeight;
-      if (materialType === "dirt") baseHeight = surfaceHeight;
-      if (materialType === "dirt2") baseHeight = surfaceHeight;
-      if (materialType === "sand") baseHeight = surfaceHeight - 0.2;
-      if (materialType === "stone") baseHeight = surfaceHeight + 3;
-      dummy.position.set(currentPosition.x, baseHeight * 0.5, currentPosition.y);
-      dummy.scale.set(1, baseHeight / 1, 1);
-      dummy.updateMatrix();
-      const perGroupInstanceId = groupedInstanceData[materialType].length;
-      groupedInstanceData[materialType].push({
-        matrix: dummy.matrix.clone(),
-        tileX, tileY,
-        worldPos: currentPosition.clone(),
-        baseHeight,
-        perGroupInstanceId
-      });
-      // Remove from grass group (set to null, will be filtered out later)
-      const grassIdx = groupedInstanceData.grass.findIndex(g => g && g.tileX === tileX && g.tileY === tileY);
-      if (grassIdx !== -1) groupedInstanceData.grass[grassIdx] = null;
-      // Update hexDataMap
-      const mapKey = `${tileX},${tileY}`;
-      hexDataMap.set(mapKey, {
-        tileX, tileY,
-        worldPos: currentPosition.clone(),
-        baseHeight,
-        materialType,
-        perGroupInstanceId
-      });
+    // Offset row and col by 1 due to padding
+    const r = hexInfo.j - paddedMinJ;
+    const c = hexInfo.i - paddedMinI;
+    if (r >= 0 && r < numRows && c >= 0 && c < numCols) { // Bounds check just in case
+        // Use hexInfo.height from JSON, but grass has physics height 0
+        const physicsHeight = hexInfo.materialType === 'grass' ? 0 : hexInfo.height;
+        heightfieldMatrix[r][c] = physicsHeight;
     }
   }
-  // Clean up nulls from grass group
-  groupedInstanceData.grass = groupedInstanceData.grass.filter(Boolean);
+
+  // This loop populates groupedInstanceData for visuals
+  // Clear existing groupedInstanceData before populating from JSON
+  // The dynamic population based on uniqueTerrainTypes earlier should handle initialization
+  // for (const type in groupedInstanceData) { // This might clear dynamically added types if not careful
+  //   groupedInstanceData[type] = [];
+  // }
+
+  for (const hexInfo of allHexInfo) {
+    const currentPosition = hexInfo.position;
+    const tileX = hexInfo.i;
+    const tileY = hexInfo.j;
+    const materialType = hexInfo.materialType; // From JSON
+    const currentHeight = hexInfo.height; // From JSON
+
+    if (!groupedInstanceData[materialType]) {
+      console.warn("Unknown material type in JSON data:", materialType, "for tile", tileX, tileY);
+      continue;
+    }
+
+    dummy.position.set(currentPosition.x, currentHeight * 0.5, currentPosition.y);
+    const baseGeometryHeight = 1; // Assuming base hex geometry is 1 unit high
+    dummy.scale.set(1, currentHeight / baseGeometryHeight, 1);
+    dummy.updateMatrix();
+
+    const perGroupInstanceId = groupedInstanceData[materialType].length;
+    groupedInstanceData[materialType].push({
+      matrix: dummy.matrix.clone(),
+      tileX: tileX, tileY: tileY,
+      worldPos: currentPosition.clone(),
+      baseHeight: currentHeight,
+      perGroupInstanceId: perGroupInstanceId
+    });
+
+    const mapKey = `${tileX},${tileY}`;
+    hexDataMap.set(mapKey, {
+      tileX: tileX, tileY: tileY,
+      worldPos: currentPosition.clone(),
+      baseHeight: currentHeight,
+      materialType: materialType,
+      perGroupInstanceId: perGroupInstanceId
+    });
+  }
+  // The explicit two-pass layering (all grass then overwrite) and the .filter(Boolean) are no longer needed
+  // as material types are directly assigned from the JSON processed into allHexInfo.
 
   // Create Heightfield using the PADDED matrix
   if (heightfieldMatrix.length > 0 && heightfieldMatrix[0].length > 0 && numCols > 0 && numRows > 0) {
@@ -305,54 +322,54 @@ const dummy = new Object3D(); // Declare dummy Object3D helper here, before the 
   seaTexture.wrapS = RepeatWrapping;
   seaTexture.wrapT = RepeatWrapping;
 
-  let seaMesh = new Mesh(
-    new CylinderGeometry(34, 34, MAX_HEIGHT * 0.2, 50),
-    new MeshPhysicalMaterial({
-      envMap: envmap,
-      color: new Color("#55aaff").convertSRGBToLinear().multiplyScalar(3),
-      ior: 1.4,
-      transmission: 1,
-      transparent: true,
-      thickness: 1.5,
-      envMapIntensity: 0.2,
-      roughness: 1,
-      metalness: 0.025,
-      roughnessMap: seaTexture,
-      metalnessMap: seaTexture,
-    })
-  );
-  seaMesh.receiveShadow = true;
-  seaMesh.rotation.y = -Math.PI * 0.333 * 0.5;
-  seaMesh.position.set(0, MAX_HEIGHT * 0.1, 0);
-  scene.add(seaMesh);
+  // let seaMesh = new Mesh(
+  //   new CylinderGeometry(34, 34, MAX_HEIGHT * 0.2, 50),
+  //   new MeshPhysicalMaterial({
+  //     envMap: envmap,
+  //     color: new Color("#55aaff").convertSRGBToLinear().multiplyScalar(3),
+  //     ior: 1.4,
+  //     transmission: 1,
+  //     transparent: true,
+  //     thickness: 1.5,
+  //     envMapIntensity: 0.2,
+  //     roughness: 1,
+  //     metalness: 0.025,
+  //     roughnessMap: seaTexture,
+  //     metalnessMap: seaTexture,
+  //   })
+  // );
+  // seaMesh.receiveShadow = true;
+  // seaMesh.rotation.y = -Math.PI * 0.333 * 0.5;
+  // seaMesh.position.set(0, MAX_HEIGHT * 0.1, 0);
+  // scene.add(seaMesh);
 
 
-  let mapContainer = new Mesh(
-    new CylinderGeometry(34.1, 34.1, MAX_HEIGHT * 0.25, 50, 1, true),
-    new MeshPhysicalMaterial({
-      envMap: envmap,
-      map: textures.dirt,
-      envMapIntensity: 0.2,
-      side: DoubleSide,
-    })
-  );
-  mapContainer.receiveShadow = true;
-  mapContainer.rotation.y = -Math.PI * 0.333 * 0.5;
-  mapContainer.position.set(0, MAX_HEIGHT * 0.125, 0);
-  scene.add(mapContainer);
+  // let mapContainer = new Mesh(
+  //   new CylinderGeometry(34.1, 34.1, MAX_HEIGHT * 0.25, 50, 1, true),
+  //   new MeshPhysicalMaterial({
+  //     envMap: envmap,
+  //     map: textures.dirt,
+  //     envMapIntensity: 0.2,
+  //     side: DoubleSide,
+  //   })
+  // );
+  // mapContainer.receiveShadow = true;
+  // mapContainer.rotation.y = -Math.PI * 0.333 * 0.5;
+  // mapContainer.position.set(0, MAX_HEIGHT * 0.125, 0);
+  // scene.add(mapContainer);
 
-  let mapFloor = new Mesh(
-    new CylinderGeometry(37, 37, MAX_HEIGHT * 0.1, 50),
-    new MeshPhysicalMaterial({
-      envMap: envmap,
-      map: textures.dirt2,
-      envMapIntensity: 0.1,
-      side: DoubleSide,
-    })
-  );
-  mapFloor.receiveShadow = true;
-  mapFloor.position.set(0, -MAX_HEIGHT * 0.05, 0);
-  scene.add(mapFloor);
+  // let mapFloor = new Mesh(
+  //   new CylinderGeometry(37, 37, MAX_HEIGHT * 0.1, 50),
+  //   new MeshPhysicalMaterial({
+  //     envMap: envmap,
+  //     map: textures.dirt2,
+  //     envMapIntensity: 0.1,
+  //     side: DoubleSide,
+  //   })
+  // );
+  // mapFloor.receiveShadow = true;
+  // mapFloor.position.set(0, -MAX_HEIGHT * 0.05, 0);
+  // scene.add(mapFloor);
 
   // clouds(); // Removed clouds
 
