@@ -146,7 +146,7 @@ export function worldPointToHex(worldPointVec3: THREE.Vector3, hexDataMap: Map<s
     }
 
     if (closestHex && minDistanceSq < (1.0 * 1.0)) {
-        return { tileX: closestHex.tileX, tileY: closestHex.tileY, ...closestHex };
+        return { ...closestHex };
     }
     return null;
 }

@@ -73,7 +73,9 @@ async function main(): Promise<void> {
 
     console.log(allPhysicalSpheres, "allPhysicalSpheres");
 
-    setupMouseControls(core.renderer.domElement, core.camera, core.world, allHexMeshes, hexDataMap, mapInstancedMeshes, playerSphere, animationState);
+    if (playerSphere) {
+        setupMouseControls(core.renderer.domElement, core.camera, core.world, allHexMeshes, hexDataMap, mapInstancedMeshes, playerSphere, animationState);
+    }
 
     core.renderer.setAnimationLoop(animate);
 }
@@ -100,11 +102,11 @@ function animate(): void {
     }
 
     const surfaceHeight = 3;
-    const sphereRadius = playerSphere ? playerSphere.body.shapes[0].radius : 1;
+    const sphereRadius = playerSphere ? (playerSphere.body.shapes[0] as CANNON.Sphere).radius : 1;
 
     allPhysicalSpheres.forEach(sphereObj => {
         let floorY = surfaceHeight;
-        const currentHex = worldPointToHex(sphereObj.body.position, hexDataMap);
+        const currentHex = worldPointToHex(new THREE.Vector3(sphereObj.body.position.x, sphereObj.body.position.y, sphereObj.body.position.z), hexDataMap);
    
         if (prevFloorY) {
             floorY = prevFloorY;
@@ -135,7 +137,7 @@ function animate(): void {
                     (Math.random() - 0.5) * 2 * RANDOM_IMPULSE_STRENGTH
                 );
                 sphereObj.body.applyImpulse(impulse, sphereObj.body.position);
-                if (sphereObj.body.sleepState === CANNON.Body.SLEEPING) {
+                if (sphereObj.body.sleepState === CANNON.Body.SLEEPY) {
                     sphereObj.body.wakeUp();
                 }
             }

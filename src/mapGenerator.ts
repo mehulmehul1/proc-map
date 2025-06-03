@@ -4,7 +4,7 @@ import * as CANNON from 'cannon-es';
 import { tileToPosition, createHexMaterial } from './utils.js';
 import { MAX_HEIGHT } from './config.ts';
 
-interface HexData {
+export interface HexData {
     tileX: number;
     tileY: number;
     worldPos: THREE.Vector2;
@@ -43,7 +43,7 @@ interface LoadedMapData {
 }
 
 interface Textures {
-    [key: string]: THREE.Texture;
+    [key: string]: THREE.Texture | THREE.Texture[] | undefined;
     grass: THREE.Texture[];
     grassNormal?: THREE.Texture;
 }

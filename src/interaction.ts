@@ -4,22 +4,19 @@ import * as CANNON from 'cannon-es';
 import { JUMP_FORCE, MAX_HEIGHT } from './config.ts';
 import { aStarPathfinding, worldPointToHex } from './pathfinding.ts';
 import { startHexLift, startSpherePath } from './animation.ts';
+import { Sphere } from './physicsObjects.ts';
+import { AnimationState } from './types/index.ts';
 
 interface HexData {
     materialType: string;
     perGroupInstanceId: number;
+    worldPos: THREE.Vector2;
+    baseHeight: number;
     tileX: number;
     tileY: number;
 }
 
-interface AnimationState {
-    isHexLifting: boolean;
-    isSphereAnimating: boolean;
-}
-
-interface PlayerSphere {
-    body: CANNON.Body;
-}
+type PlayerSphere = Sphere;
 
 let isRightMouseDown: boolean = false; // Module-level state for jump logic
 
@@ -86,7 +83,7 @@ function onMouseDown(
         }
 
         if (finalClickedHexData && !animationState.isHexLifting && !animationState.isSphereAnimating) {
-            const sphereCurrentHex = worldPointToHex(playerSphere.body.position, hexDataMap);
+            const sphereCurrentHex = worldPointToHex(new THREE.Vector3(playerSphere.body.position.x, playerSphere.body.position.y, playerSphere.body.position.z), hexDataMap);
             let allowHexLift: boolean = true;
             if (sphereCurrentHex && sphereCurrentHex.tileX === finalClickedHexData.tileX && sphereCurrentHex.tileY === finalClickedHexData.tileY) {
                 allowHexLift = false; // Don't lift hex player is on
@@ -108,7 +105,7 @@ function onMouseDown(
     } else if (event.button === 2 && !isRightMouseDown) { // Right mouse button for jump
         isRightMouseDown = true;
         const sphereBody: CANNON.Body = playerSphere.body;
-        const sphereRadius: number = sphereBody.shapes[0].radius;
+        const sphereRadius: number = (sphereBody.shapes[0] as CANNON.Sphere).radius;
         const rayFrom: CANNON.Vec3 = new CANNON.Vec3().copy(sphereBody.position);
         const rayTo: CANNON.Vec3 = new CANNON.Vec3(sphereBody.position.x, sphereBody.position.y - sphereRadius - 0.1, sphereBody.position.z);
         const result: CANNON.RaycastResult = new CANNON.RaycastResult();
