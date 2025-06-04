@@ -81,6 +81,8 @@ export function createMap(
             const { q, r, s } = tile.coord;
             const position = cubeToPosition(q, r, s);
             let materialType = tile.terrain;
+            // Ensure elevation is a valid number
+            const elevation = typeof tile.elevation === 'number' && !isNaN(tile.elevation) ? tile.elevation : 0;
 
             if (!groupedInstanceData[materialType]) {
                 console.warn(`Material type "${materialType}" from JSON not pre-defined. Adding dynamically.`);
@@ -94,7 +96,7 @@ export function createMap(
             allHexInfo.push({
                 q, r, s,
                 position,
-                height: tile.elevation,
+                height: elevation,
                 materialType
             });
             minQ = Math.min(minQ, q);
@@ -233,8 +235,15 @@ export function createMap(
                 if (!hex) continue;
                 
                 const corners = getHexCorners(hex.worldPos, 1);
-                const points = corners.map(c => new THREE.Vector3(c.x, hex.baseHeight + 0.01, c.y));
-                points.push(points[0].clone());
+                // Filter out any corners with NaN values
+                const validCorners = corners.filter(corner => 
+                    !isNaN(corner.x) && !isNaN(corner.y)
+                );
+                
+                if (validCorners.length < 3) continue; // Skip if we don't have enough valid corners
+                
+                const points = validCorners.map(c => new THREE.Vector3(c.x, hex.baseHeight + 0.01, c.y));
+                points.push(points[0].clone()); // Close the loop with the first point
                 
                 const geometry = new THREE.BufferGeometry().setFromPoints(points);
                 const material = new THREE.LineBasicMaterial({ color, linewidth: 2 });
@@ -242,7 +251,7 @@ export function createMap(
                 line.frustumCulled = false;
                 scene.add(line);
 
-                const shape = new THREE.Shape(corners.map(c => new THREE.Vector2(c.x, c.y)));
+                const shape = new THREE.Shape(validCorners.map(c => new THREE.Vector2(c.x, c.y)));
                 const overlayGeometry = new THREE.ShapeGeometry(shape);
                 const overlayMaterial = new THREE.MeshBasicMaterial({ 
                     color, 
@@ -263,7 +272,14 @@ export function createMap(
                 if (!hex) continue;
                 
                 const corners = getHexCorners(hex.worldPos, 1);
-                const shape = new THREE.Shape(corners.map(c => new THREE.Vector2(c.x, c.y)));
+                // Filter out any corners with NaN values
+                const validCorners = corners.filter(corner => 
+                    !isNaN(corner.x) && !isNaN(corner.y)
+                );
+                
+                if (validCorners.length < 3) continue; // Skip if we don't have enough valid corners
+                
+                const shape = new THREE.Shape(validCorners.map(c => new THREE.Vector2(c.x, c.y)));
                 const geometry = new THREE.ShapeGeometry(shape);
                 const material = new THREE.MeshBasicMaterial({ 
                     color, 
@@ -281,12 +297,16 @@ export function createMap(
 }
 
 function getHexCorners(position: THREE.Vector2, radius = 1): THREE.Vector2[] {
+    // Ensure position coordinates are valid numbers
+    const x = typeof position.x === 'number' && !isNaN(position.x) ? position.x : 0;
+    const y = typeof position.y === 'number' && !isNaN(position.y) ? position.y : 0;
+    
     const corners: THREE.Vector2[] = [];
     for (let i = 0; i < 6; i++) {
         const angle = Math.PI / 3 * i + Math.PI / 6; // Pointy top
         corners.push(new THREE.Vector2(
-            position.x + radius * Math.cos(angle),
-            position.y + radius * Math.sin(angle)
+            x + radius * Math.cos(angle),
+            y + radius * Math.sin(angle)
         ));
     }
     return corners;
