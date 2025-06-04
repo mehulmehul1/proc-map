@@ -102,7 +102,7 @@ function animate(): void {
     }
 
     const surfaceHeight = 3;
-    const sphereRadius = playerSphere ? (playerSphere.body.shapes[0] as CANNON.Sphere).radius : 1;
+    const sphereRadius = playerSphere && playerSphere.body.shapes[0] ? (playerSphere.body.shapes[0] as CANNON.Sphere).radius : 1;
 
     allPhysicalSpheres.forEach(sphereObj => {
         let floorY = surfaceHeight;

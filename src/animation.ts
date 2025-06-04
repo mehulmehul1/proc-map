@@ -77,7 +77,7 @@ export function updateSpherePathAnimation(
 
     const elapsedTime = performance.now() - animationState.sphereAnimationStartTime;
     let progress = elapsedTime / SPHERE_ANIMATION_DURATION;
-    const sphereRadius = (sphereBody.shapes[0] as CANNON.Sphere).radius;
+    const sphereRadius = sphereBody.shapes[0] ? (sphereBody.shapes[0] as CANNON.Sphere).radius : 1;
 
     if (progress >= 1) {
         progress = 1;
@@ -171,7 +171,7 @@ export function startSpherePath(
     animationState.currentPath = path;
     animationState.currentPathIndex = 0;
     const firstStepNode = animationState.currentPath[0];
-    const sphereRadius = (sphereBody.shapes[0] as CANNON.Sphere).radius;
+    const sphereRadius = sphereBody.shapes[0] ? (sphereBody.shapes[0] as CANNON.Sphere).radius : 1;
 
     animationState.sphereAnimationStartPos.copy(sphereBody.position);
 
