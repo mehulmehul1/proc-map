@@ -2,22 +2,17 @@ import * as THREE from 'three';
 import { MeshPhysicalMaterial, Vector2, CylinderGeometry, SphereGeometry, BufferGeometry } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-const SIZE = 1.0; // Size of the hexagon (distance from center to corner)
-const WIDTH = SIZE * Math.sqrt(3);
-const HEIGHT = SIZE * 2;
-
 // Cube coordinates to pixel position
 export function cubeToPosition(q: number, r: number): Vector2 {
-  const x = WIDTH * (q + r/2);
-  const y = HEIGHT * (3/4) * r;
+  const x = 1.77 * (q + r/2);  // Horizontal spacing
+  const y = 1.535 * r;         // Vertical spacing
   return new Vector2(x, y);
 }
 
 // Pixel position to nearest cube coordinates
 export function positionToCube(x: number, y: number): { q: number; r: number; s: number } {
-  // Convert from pixel coordinates to axial coordinates
-  const r = (2/3) * y / SIZE;
-  const q = (x * Math.sqrt(3)/3 - y/3) / SIZE;
+  const r = y / 1.535;
+  const q = x / 1.77 - r/2;
   const s = -q - r;  // s coordinate to satisfy q + r + s = 0
   
   // Round to nearest hex
