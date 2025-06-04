@@ -4,7 +4,7 @@ import * as CANNON from 'cannon-es';
 import Stats from 'stats.js';
 
 import { TIME_STEP, RANDOM_MOVEMENT_PROBABILITY, RANDOM_IMPULSE_STRENGTH } from './config.ts';
-import { initCore } from './setup.js';
+import { initCore } from './setup.ts';
 import { loadAssets } from './assetLoader.ts';
 import { createMap, hexDataMap, allHexMeshes, instancedMeshes as mapInstancedMeshes } from './mapGenerator.ts';
 import { createSpheres, Sphere } from './physicsObjects.ts';

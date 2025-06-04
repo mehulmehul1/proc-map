@@ -12,7 +12,7 @@
   "devDependencies": {
     "@types/stats.js": "^0.17.0",
     "@types/three": "^0.161.0",
-    "typescript": "^5.0.0",
+    "typescript": "^5.8.3",
     "vite": "^5.1.4"
   },
   "dependencies": {
@@ -21,6 +21,6 @@
     "three": "^0.161.0"
   },
   "engines": {
-  "node": "18.x"
-}
+    "node": "18.x"
+  }
 }
