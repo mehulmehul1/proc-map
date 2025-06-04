@@ -13,11 +13,12 @@ interface InstancedModels {
     denseForestTrees: THREE.InstancedMesh;
 }
 
-const TREE_BASE_SCALE = 15; // 15m target height
-const ROCK_BASE_SCALE = 3;  // 3m target height
-const INFANTRY_BASE_SCALE = 2; // 2m target height
-const HEX_RADIUS = 60; // 120m edge-to-edge = ~60m radius
-const ROAD_CLEARANCE = 3; // 3m clearance from roads
+// Scaled up by 4x
+const TREE_BASE_SCALE = 60; // 60m target height (4 * 15)
+const ROCK_BASE_SCALE = 12;  // 12m target height (4 * 3)
+const INFANTRY_BASE_SCALE = 8; // 8m target height (4 * 2)
+const HEX_RADIUS = 240; // 480m edge-to-edge = ~240m radius (4 * 60)
+const ROAD_CLEARANCE = 12; // 12m clearance from roads (4 * 3)
 
 async function loadModels(): Promise<ModelCache> {
     const loader = new GLTFLoader();
@@ -51,12 +52,7 @@ function getRandomPositionInHex(hexWorldPos: THREE.Vector2, avoidRoads: boolean 
         );
         attempts++;
         
-        // If we don't need to avoid roads or we've tried too many times, return the position
         if (!avoidRoads || attempts >= maxAttempts) break;
-        
-        // Check if position is clear of roads (simplified check - replace with actual road check)
-        // const isClearOfRoads = checkRoadClearance(position, ROAD_CLEARANCE);
-        // if (isClearOfRoads) break;
         
     } while (true);
 
@@ -85,7 +81,7 @@ function placeRocks(
         const pos = getRandomPositionInHex(hex.worldPos, true);
         const scale = ROCK_BASE_SCALE * (0.9 + Math.random() * 0.2);
         
-        rockModel.position.set(pos.x, hex.baseHeight, pos.y);
+        rockModel.position.set(pos.x, hex.baseHeight * 4, pos.y); // Scale height by 4x
         rockModel.rotation.y = Math.random() * Math.PI * 2;
         rockModel.scale.setScalar(scale);
         rockModel.traverse((child) => {
@@ -109,7 +105,7 @@ function placeTrees(
         const pos = getRandomPositionInHex(hex.worldPos, true);
         const scale = TREE_BASE_SCALE * (0.9 + Math.random() * 0.2);
         
-        dummy.position.set(pos.x, hex.baseHeight, pos.y);
+        dummy.position.set(pos.x, hex.baseHeight * 4, pos.y); // Scale height by 4x
         dummy.rotation.y = Math.random() * Math.PI * 2;
         dummy.scale.setScalar(scale);
         dummy.updateMatrix();
@@ -136,18 +132,15 @@ export async function populateHexMap(
     const models = await loadModels();
     const dummy = new THREE.Object3D();
     
-    // Find the first mesh in the tree model
     const treeMesh = findFirstMesh(models.tree);
     if (!treeMesh) {
         console.error('No mesh found in tree model');
         return;
     }
     
-    // Extract tree geometry and materials
     const treeGeometry = treeMesh.geometry.clone();
     const treeMaterial = treeMesh.material;
     
-    // Count forest hexes
     let lightForestCount = 0;
     let denseForestCount = 0;
     
@@ -156,7 +149,6 @@ export async function populateHexMap(
         if (hex.materialType === 'forest-dense') denseForestCount += 30;
     });
 
-    // Create instanced meshes
     const instancedModels: InstancedModels = {
         lightForestTrees: createInstancedMesh(treeGeometry, treeMaterial, lightForestCount),
         denseForestTrees: createInstancedMesh(treeGeometry, treeMaterial, denseForestCount)
@@ -165,7 +157,6 @@ export async function populateHexMap(
     let lightForestIndex = 0;
     let denseForestIndex = 0;
 
-    // Populate the map
     hexDataMap.forEach(hex => {
         switch(hex.materialType) {
             case 'hill':
@@ -194,14 +185,13 @@ export async function populateHexMap(
                 break;
 
             case 'clear':
-                // Place 1-2 trees
                 const clearTreeCount = Math.floor(Math.random() * 2) + 1;
                 for (let i = 0; i < clearTreeCount; i++) {
                     const treeModel = models.tree.clone();
                     const pos = getRandomPositionInHex(hex.worldPos, true);
                     const scale = TREE_BASE_SCALE * (0.9 + Math.random() * 0.2);
                     
-                    treeModel.position.set(pos.x, hex.baseHeight, pos.y);
+                    treeModel.position.set(pos.x, hex.baseHeight * 4, pos.y); // Scale height by 4x
                     treeModel.rotation.y = Math.random() * Math.PI * 2;
                     treeModel.scale.setScalar(scale);
                     treeModel.traverse((child) => {
@@ -213,13 +203,11 @@ export async function populateHexMap(
                     scene.add(treeModel);
                 }
                 
-                // Add one rock
                 placeRocks(scene, hex, models, 1);
                 break;
         }
     });
 
-    // Add instanced meshes to scene and update matrices
     scene.add(instancedModels.lightForestTrees);
     scene.add(instancedModels.denseForestTrees);
     

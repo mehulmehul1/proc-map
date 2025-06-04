@@ -4,7 +4,8 @@ import { MeshPhysicalMaterial, Vector2, CylinderGeometry, SphereGeometry, Buffer
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export function tileToPosition(tileX: number, tileY: number): Vector2 {
-  return new Vector2((tileX + (tileY % 2) * 0.5) * 1.77, tileY * 1.535);
+  // Increased scale by 4x (1.77 -> 7.08, 1.535 -> 6.14)
+  return new Vector2((tileX + (tileY % 2) * 0.5) * 7.08, tileY * 6.14);
 }
 
 interface MaterialParams {
