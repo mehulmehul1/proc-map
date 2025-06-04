@@ -22,6 +22,7 @@ export function createSpheres(
     // Main Sphere
     const sphereBody = new CANNON.Body({
         mass: 1,
+        shape: new CANNON.Sphere(sphereRadius),
         material: defaultMaterial,
         type: CANNON.Body.DYNAMIC,
         linearDamping: 0.4,
@@ -49,10 +50,10 @@ export function createSpheres(
             mass: 5,
             shape: new CANNON.Sphere(sphereRadius),
             material: defaultMaterial,
+            type: CANNON.Body.DYNAMIC,
             angularDamping: 0.8,
             linearDamping: 0.5,
-            collisionResponse: false,
-            type: CANNON.Body.DYNAMIC
+            collisionResponse: false
         });
         body.sleepSpeedLimit = 0.2;
         body.sleepTimeLimit = 0.5;
@@ -67,9 +68,8 @@ export function createSpheres(
         mesh.castShadow = true;
         mesh.receiveShadow = true;
         scene.add(mesh);
-        console.log(body)
         spheres.push({ body, mesh, isPlayer: false });
     }
 
-    return spheres; // Returns an array of {body, mesh, isPlayer}
+    return spheres;
 }
