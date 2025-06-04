@@ -119,6 +119,16 @@ function placeTrees(
     return startIndex + count;
 }
 
+function findFirstMesh(object: THREE.Object3D): THREE.Mesh | null {
+    let firstMesh: THREE.Mesh | null = null;
+    object.traverse((child) => {
+        if (!firstMesh && child instanceof THREE.Mesh) {
+            firstMesh = child;
+        }
+    });
+    return firstMesh;
+}
+
 export async function populateHexMap(
     scene: THREE.Scene,
     hexDataMap: Map<string, HexData>
@@ -126,9 +136,16 @@ export async function populateHexMap(
     const models = await loadModels();
     const dummy = new THREE.Object3D();
     
+    // Find the first mesh in the tree model
+    const treeMesh = findFirstMesh(models.tree);
+    if (!treeMesh) {
+        console.error('No mesh found in tree model');
+        return;
+    }
+    
     // Extract tree geometry and materials
-    const treeGeometry = models.tree.children[0].geometry.clone();
-    const treeMaterial = (models.tree.children[0] as THREE.Mesh).material;
+    const treeGeometry = treeMesh.geometry.clone();
+    const treeMaterial = treeMesh.material;
     
     // Count forest hexes
     let lightForestCount = 0;
