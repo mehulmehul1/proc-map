@@ -1,3 +1,4 @@
+// mapGenerator.ts
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { cubeToPosition, createHexMaterial } from './utils.ts';
@@ -38,15 +39,16 @@ interface GroupedInstanceData {
 
 interface LoadedMapData {
     hex_data?: Array<{
-        coord: string;
+        coord: { q: number; r: number; s: number };
         terrain: string;
         elevation: number;
     }>;
     strategic_control_zones?: {
         [zoneId: string]: {
-            all_hexes?: string[];
-            key_hexes?: string[];
+            all_hexes?: Array<{ q: number; r: number; s: number }>;
+            key_hexes?: Array<{ q: number; r: number; s: number }>;
             color_hint?: string;
+            name?: string;
         };
     };
 }
@@ -76,9 +78,8 @@ export function createMap(
 
     if (loadedMapData?.hex_data) {
         for (const tile of loadedMapData.hex_data) {
-            const [q, r] = tile.coord.split(',').map(Number);
-            const s = -q - r; // Cube coordinate constraint: q + r + s = 0
-            const position = cubeToPosition(q, r);
+            const { q, r, s } = tile.coord;
+            const position = cubeToPosition(q, r, s);
             let materialType = tile.terrain;
 
             if (!groupedInstanceData[materialType]) {
@@ -103,7 +104,7 @@ export function createMap(
         }
     } else {
         console.error("Failed to load hex_data or it's missing. Creating a default tile.");
-        allHexInfo.push({ q: 0, r: 0, s: 0, position: cubeToPosition(0, 0), height: 1, materialType: "grass" });
+        allHexInfo.push({ q: 0, r: 0, s: 0, position: cubeToPosition(0, 0, 0), height: 1, materialType: "grass" });
         minQ = maxQ = minR = maxR = 0;
     }
 
@@ -152,7 +153,7 @@ export function createMap(
             perGroupInstanceId
         });
 
-        hexDataMap.set(`${q},${r}`, {
+        hexDataMap.set(`${q},${r},${s}`, {
             q, r, s,
             worldPos: currentPosition.clone(),
             baseHeight: currentHeight,
@@ -171,7 +172,7 @@ export function createMap(
         quaternion.setFromEuler(-Math.PI / 2, 0, 0);
         hfBody.addShape(heightfieldShape, new CANNON.Vec3(), quaternion);
 
-        const paddedMinCornerWorldPos = cubeToPosition(paddedMinQ, paddedMinR);
+        const paddedMinCornerWorldPos = cubeToPosition(paddedMinQ, paddedMinR, -paddedMinQ-paddedMinR);
 
         const hfWidth = (numCols - 1) * elementSizeForHeightfield;
         const hfDepth = (numRows - 1) * elementSizeForHeightfield;
@@ -227,8 +228,8 @@ export function createMap(
         const color = zone.color_hint || '#FF00FF';
         
         if (zone.all_hexes) {
-            for (const coord of zone.all_hexes) {
-                const hex = hexDataMap.get(coord);
+            for (const hexCoord of zone.all_hexes) {
+                const hex = hexDataMap.get(`${hexCoord.q},${hexCoord.r},${hexCoord.s}`);
                 if (!hex) continue;
                 
                 const corners = getHexCorners(hex.worldPos, 1);
@@ -257,8 +258,8 @@ export function createMap(
         }
 
         if (zone.key_hexes) {
-            for (const coord of zone.key_hexes) {
-                const hex = hexDataMap.get(coord);
+            for (const hexCoord of zone.key_hexes) {
+                const hex = hexDataMap.get(`${hexCoord.q},${hexCoord.r},${hexCoord.s}`);
                 if (!hex) continue;
                 
                 const corners = getHexCorners(hex.worldPos, 1);
@@ -282,7 +283,7 @@ export function createMap(
 function getHexCorners(position: THREE.Vector2, radius = 1): THREE.Vector2[] {
     const corners: THREE.Vector2[] = [];
     for (let i = 0; i < 6; i++) {
-        const angle = Math.PI / 3 * i;
+        const angle = Math.PI / 3 * i + Math.PI / 6; // Pointy top
         corners.push(new THREE.Vector2(
             position.x + radius * Math.cos(angle),
             position.y + radius * Math.sin(angle)
