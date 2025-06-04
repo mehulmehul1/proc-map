@@ -1,5 +1,5 @@
 // main.ts
-import * as THREE from 'three'; // For Vector3 etc. if needed directly
+import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import Stats from 'stats.js';
 
@@ -11,6 +11,7 @@ import { createSpheres, Sphere } from './physicsObjects.ts';
 import { setupMouseControls } from './interaction.ts';
 import { updateHexLiftAnimation, updateSpherePathAnimation } from './animation.ts';
 import { worldPointToHex } from './pathfinding.ts';
+import { populateHexMap } from './modelPopulation.ts';
 
 interface Core {
     scene: THREE.Scene;
@@ -63,16 +64,15 @@ const animationState: AnimationState = {
 async function main(): Promise<void> {
     core = initCore();
     assets = await loadAssets(core.pmrem);
-    (window as any).assets = assets; // Make assets globally available for interaction hover
-
-    console.log(assets);
+    (window as any).assets = assets;
 
     createMap(core.scene, core.world, assets.loadedMapData, assets.textures, assets.envmap, core.defaultMaterial);
+    
+    // Populate the map with 3D models
+    await populateHexMap(core.scene, hexDataMap);
 
     allPhysicalSpheres = createSpheres(core.scene, core.world, assets.envmap, core.defaultMaterial);
     playerSphere = allPhysicalSpheres.find(s => s.isPlayer);
-
-    console.log(allPhysicalSpheres, "allPhysicalSpheres");
 
     if (playerSphere) {
         setupMouseControls(core.renderer.domElement, core.camera, core.world, allHexMeshes, hexDataMap, mapInstancedMeshes, playerSphere, animationState);
