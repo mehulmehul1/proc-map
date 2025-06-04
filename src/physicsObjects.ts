@@ -29,7 +29,13 @@ export function createSpheres(
         angularDamping: 0.4,
         fixedRotation: false,
         collisionResponse: true
-    });
+    }) as CANNON.Body & {
+        ccdSpeedThreshold: number;
+        ccdSweptSphereRadius: number;
+    };
+
+    sphereBody.ccdSpeedThreshold = 0.2;
+    sphereBody.ccdSweptSphereRadius = 0.05;
     sphereBody.sleepSpeedLimit = 0.2;
     sphereBody.sleepTimeLimit = 0.5;
     sphereBody.position.set(0, Math.max(MAX_HEIGHT + sphereRadius + 0.2, surfaceHeight), 0); // Start high
@@ -54,9 +60,16 @@ export function createSpheres(
             angularDamping: 0.8,
             linearDamping: 0.5,
             collisionResponse: false
-        });
+        }) as CANNON.Body & {
+            ccdSpeedThreshold: number;
+            ccdSweptSphereRadius: number;
+        };
+
+        body.ccdSpeedThreshold = 0.2;
+        body.ccdSweptSphereRadius = 0.05;
         body.sleepSpeedLimit = 0.2;
         body.sleepTimeLimit = 0.5;
+
         const angle = (i / NUM_ADDITIONAL_SPHERES) * Math.PI * 2;
         const xOffset = Math.cos(angle) * 4;
         const zOffset = Math.sin(angle) * 4;
