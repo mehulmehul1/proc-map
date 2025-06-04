@@ -1,7 +1,7 @@
 // interaction.ts
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import { JUMP_FORCE, MAX_HEIGHT } from './config.ts';
+import { JUMP_FORCE } from './config.ts';
 import { aStarPathfinding, worldPointToHex } from './pathfinding.ts';
 import { startHexLift, startSpherePath } from './animation.ts';
 import { Sphere } from './physicsObjects.ts';
@@ -97,7 +97,7 @@ function onMouseDown(
                 const targetHexCoords = { tileX: finalClickedHexData.tileX, tileY: finalClickedHexData.tileY };
                 const path = aStarPathfinding(sphereCurrentHex, targetHexCoords, hexDataMap);
                 if (path.length > 0) {
-                    startSpherePath(world, path, playerSphere.body, animationState, hexDataMap);
+                    startSpherePath(world, path, playerSphere.body, animationState);
                 }
             }
         }

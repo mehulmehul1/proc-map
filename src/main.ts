@@ -3,7 +3,7 @@ import * as THREE from 'three'; // For Vector3 etc. if needed directly
 import * as CANNON from 'cannon-es';
 import Stats from 'stats.js';
 
-import { TIME_STEP, MAX_HEIGHT, RANDOM_MOVEMENT_PROBABILITY, RANDOM_IMPULSE_STRENGTH } from './config.ts';
+import { TIME_STEP, RANDOM_MOVEMENT_PROBABILITY, RANDOM_IMPULSE_STRENGTH } from './config.ts';
 import { initCore } from './setup.js';
 import { loadAssets } from './assetLoader.ts';
 import { createMap, hexDataMap, allHexMeshes, instancedMeshes as mapInstancedMeshes } from './mapGenerator.ts';

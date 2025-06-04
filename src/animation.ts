@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { HEX_LIFT_AMOUNT, HEX_LIFT_DURATION, SPHERE_ANIMATION_DURATION, MAX_HEIGHT } from './config.ts';
-import { worldPointToHex } from './pathfinding.ts'; // For getting current hex of sphere
+// import { worldPointToHex } from './pathfinding.ts'; // For getting current hex of sphere
 
 interface LiftedHexInfo {
     instancedMesh: THREE.InstancedMesh;
@@ -37,7 +37,6 @@ interface InstancedMeshes {
 export function updateHexLiftAnimation(
     currentTimeMs: number, 
     animationState: AnimationState, 
-    instancedMeshes: InstancedMeshes
 ): void {
     if (!animationState.isHexLifting || !animationState.liftedHexInfo) return;
     const { liftedHexInfo } = animationState;
@@ -73,7 +72,6 @@ export function updateSpherePathAnimation(
     world: CANNON.World, 
     animationState: AnimationState, 
     sphereBody: CANNON.Body, 
-    hexDataMap: Map<string, HexData>
 ): void {
     if (!animationState.isSphereAnimating) return;
 
@@ -169,7 +167,6 @@ export function startSpherePath(
     path: any[], // Replace 'any' with your path node type
     sphereBody: CANNON.Body, 
     animationState: AnimationState, 
-    hexDataMap: Map<string, HexData>
 ): void {
     animationState.currentPath = path;
     animationState.currentPathIndex = 0;

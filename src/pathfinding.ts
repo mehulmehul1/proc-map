@@ -31,8 +31,8 @@ function getHexNode(tileX: number, tileY: number, hexDataMap: Map<string, HexDat
 }
 
 function heuristic(a: Coord, b: Coord): number {
-    const dX = Math.abs(a.tileX - b.tileX);
-    const dY = Math.abs(a.tileY - b.tileY);
+       // const dX = Math.abs(a.tileX - b.tileX);
+       // const dY = Math.abs(a.tileY - b.tileY);
     return (Math.abs(a.tileX - b.tileX) + Math.abs(a.tileY - b.tileY) + Math.abs((a.tileX - a.tileY) - (b.tileX - b.tileY))) / 2;
 }
 
@@ -134,10 +134,11 @@ export function worldPointToHex(worldPointVec3: THREE.Vector3, hexDataMap: Map<s
     let closestHex: HexData | null = null;
     let minDistanceSq = Infinity;
 
-    for (const [key, hexData] of hexDataMap) {
+    for (const [_, hexData] of hexDataMap) {
         const dx = worldPointVec3.x - hexData.worldPos.x;
         const dz = worldPointVec3.z - hexData.worldPos.y;
         const distanceSq = dx * dx + dz * dz;
+
 
         if (distanceSq < minDistanceSq) {
             minDistanceSq = distanceSq;
