@@ -2,9 +2,8 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ACESFilmicToneMapping, sRGBEncoding, PCFSoftShadowMap, PMREMGenerator } from 'three';
+import { ACESFilmicToneMapping, PCFSoftShadowMap, PMREMGenerator } from 'three';
 import {
-    PHYSICS_SOLVER_ITERATIONS, PHYSICS_SOLVER_TOLERANCE,
     FRICTION, RESTITUTION
 } from './config';
 
