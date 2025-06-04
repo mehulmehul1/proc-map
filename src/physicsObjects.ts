@@ -26,7 +26,7 @@ export function createSpheres(
         material: defaultMaterial,
         angularDamping: 0.8,
         linearDamping: 0.5,
-        collisionResponse: true,
+        collisionResponse: false,
     });
     mainSphereBody.sleepSpeedLimit = 0.2;
     mainSphereBody.sleepTimeLimit = 0.5;
@@ -52,7 +52,7 @@ export function createSpheres(
             material: defaultMaterial,
             angularDamping: 0.8,
             linearDamping: 0.5,
-            collisionResponse: true,
+            collisionResponse: false,
         });
         body.sleepSpeedLimit = 0.2;
         body.sleepTimeLimit = 0.5;
