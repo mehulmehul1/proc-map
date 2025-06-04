@@ -1,4 +1,3 @@
-// mapGenerator.ts
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { cubeToPosition, createHexMaterial } from './utils.ts';
@@ -39,16 +38,15 @@ interface GroupedInstanceData {
 
 interface LoadedMapData {
     hex_data?: Array<{
-        coord: { q: number; r: number; s: number };
+        coord: string;
         terrain: string;
         elevation: number;
     }>;
     strategic_control_zones?: {
         [zoneId: string]: {
-            all_hexes?: Array<{ q: number; r: number; s: number }>;
-            key_hexes?: Array<{ q: number; r: number; s: number }>;
+            all_hexes?: string[];
+            key_hexes?: string[];
             color_hint?: string;
-            name?: string;
         };
     };
 }
@@ -78,11 +76,10 @@ export function createMap(
 
     if (loadedMapData?.hex_data) {
         for (const tile of loadedMapData.hex_data) {
-            const { q, r, s } = tile.coord;
-            const position = cubeToPosition(q, r, s);
+            const [q, r] = tile.coord.split(',').map(Number);
+            const s = -q - r; // Cube coordinate constraint: q + r + s = 0
+            const position = cubeToPosition(q, r);
             let materialType = tile.terrain;
-            // Ensure elevation is a valid number
-            const elevation = typeof tile.elevation === 'number' && !isNaN(tile.elevation) ? tile.elevation : 0;
 
             if (!groupedInstanceData[materialType]) {
                 console.warn(`Material type "${materialType}" from JSON not pre-defined. Adding dynamically.`);
@@ -96,7 +93,7 @@ export function createMap(
             allHexInfo.push({
                 q, r, s,
                 position,
-                height: elevation,
+                height: tile.elevation,
                 materialType
             });
             minQ = Math.min(minQ, q);
@@ -106,7 +103,7 @@ export function createMap(
         }
     } else {
         console.error("Failed to load hex_data or it's missing. Creating a default tile.");
-        allHexInfo.push({ q: 0, r: 0, s: 0, position: cubeToPosition(0, 0, 0), height: 1, materialType: "grass" });
+        allHexInfo.push({ q: 0, r: 0, s: 0, position: cubeToPosition(0, 0), height: 1, materialType: "grass" });
         minQ = maxQ = minR = maxR = 0;
     }
 
@@ -155,7 +152,7 @@ export function createMap(
             perGroupInstanceId
         });
 
-        hexDataMap.set(`${q},${r},${s}`, {
+        hexDataMap.set(`${q},${r}`, {
             q, r, s,
             worldPos: currentPosition.clone(),
             baseHeight: currentHeight,
@@ -174,7 +171,7 @@ export function createMap(
         quaternion.setFromEuler(-Math.PI / 2, 0, 0);
         hfBody.addShape(heightfieldShape, new CANNON.Vec3(), quaternion);
 
-        const paddedMinCornerWorldPos = cubeToPosition(paddedMinQ, paddedMinR, -paddedMinQ-paddedMinR);
+        const paddedMinCornerWorldPos = cubeToPosition(paddedMinQ, paddedMinR);
 
         const hfWidth = (numCols - 1) * elementSizeForHeightfield;
         const hfDepth = (numRows - 1) * elementSizeForHeightfield;
@@ -230,20 +227,13 @@ export function createMap(
         const color = zone.color_hint || '#FF00FF';
         
         if (zone.all_hexes) {
-            for (const hexCoord of zone.all_hexes) {
-                const hex = hexDataMap.get(`${hexCoord.q},${hexCoord.r},${hexCoord.s}`);
+            for (const coord of zone.all_hexes) {
+                const hex = hexDataMap.get(coord);
                 if (!hex) continue;
                 
                 const corners = getHexCorners(hex.worldPos, 1);
-                // Filter out any corners with NaN values
-                const validCorners = corners.filter(corner => 
-                    !isNaN(corner.x) && !isNaN(corner.y)
-                );
-                
-                if (validCorners.length < 3) continue; // Skip if we don't have enough valid corners
-                
-                const points = validCorners.map(c => new THREE.Vector3(c.x, hex.baseHeight + 0.01, c.y));
-                points.push(points[0].clone()); // Close the loop with the first point
+                const points = corners.map(c => new THREE.Vector3(c.x, hex.baseHeight + 0.01, c.y));
+                points.push(points[0].clone());
                 
                 const geometry = new THREE.BufferGeometry().setFromPoints(points);
                 const material = new THREE.LineBasicMaterial({ color, linewidth: 2 });
@@ -251,7 +241,7 @@ export function createMap(
                 line.frustumCulled = false;
                 scene.add(line);
 
-                const shape = new THREE.Shape(validCorners.map(c => new THREE.Vector2(c.x, c.y)));
+                const shape = new THREE.Shape(corners.map(c => new THREE.Vector2(c.x, c.y)));
                 const overlayGeometry = new THREE.ShapeGeometry(shape);
                 const overlayMaterial = new THREE.MeshBasicMaterial({ 
                     color, 
@@ -267,19 +257,12 @@ export function createMap(
         }
 
         if (zone.key_hexes) {
-            for (const hexCoord of zone.key_hexes) {
-                const hex = hexDataMap.get(`${hexCoord.q},${hexCoord.r},${hexCoord.s}`);
+            for (const coord of zone.key_hexes) {
+                const hex = hexDataMap.get(coord);
                 if (!hex) continue;
                 
                 const corners = getHexCorners(hex.worldPos, 1);
-                // Filter out any corners with NaN values
-                const validCorners = corners.filter(corner => 
-                    !isNaN(corner.x) && !isNaN(corner.y)
-                );
-                
-                if (validCorners.length < 3) continue; // Skip if we don't have enough valid corners
-                
-                const shape = new THREE.Shape(validCorners.map(c => new THREE.Vector2(c.x, c.y)));
+                const shape = new THREE.Shape(corners.map(c => new THREE.Vector2(c.x, c.y)));
                 const geometry = new THREE.ShapeGeometry(shape);
                 const material = new THREE.MeshBasicMaterial({ 
                     color, 
@@ -297,16 +280,12 @@ export function createMap(
 }
 
 function getHexCorners(position: THREE.Vector2, radius = 1): THREE.Vector2[] {
-    // Ensure position coordinates are valid numbers
-    const x = typeof position.x === 'number' && !isNaN(position.x) ? position.x : 0;
-    const y = typeof position.y === 'number' && !isNaN(position.y) ? position.y : 0;
-    
     const corners: THREE.Vector2[] = [];
     for (let i = 0; i < 6; i++) {
-        const angle = Math.PI / 3 * i + Math.PI / 6; // Pointy top
+        const angle = Math.PI / 3 * i;
         corners.push(new THREE.Vector2(
-            x + radius * Math.cos(angle),
-            y + radius * Math.sin(angle)
+            position.x + radius * Math.cos(angle),
+            position.y + radius * Math.sin(angle)
         ));
     }
     return corners;
