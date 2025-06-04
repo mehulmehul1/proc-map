@@ -1,7 +1,7 @@
 // mapGenerator.ts
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import { tileToPosition, createHexMaterial } from './utils.js';
+import { tileToPosition, createHexMaterial } from './utils.ts';
 import { MAX_HEIGHT } from './config.ts';
 
 export interface HexData {
@@ -191,10 +191,16 @@ export function createMap(
                 const grassMaterials = textures.grass.map(tex => createHexMaterial(tex, envmap, textures.grassNormal));
                 material = grassMaterials[0];
             } else if (textures[type]) {
-                material = createHexMaterial(textures[type], envmap);
+                const texture = Array.isArray(textures[type]) ? textures[type][0] : textures[type];
+                material = createHexMaterial(texture, envmap);
             } else {
                 console.warn(`No texture found for material type: ${type}. Skipping InstancedMesh creation.`);
-                material = createHexMaterial(textures["sand"], envmap);
+                const fallbackTexture = Array.isArray(textures["sand"]) ? textures["sand"][0] : textures["sand"];
+                if (fallbackTexture) {
+                    material = createHexMaterial(fallbackTexture, envmap);
+                } else {
+                    material = new THREE.MeshStandardMaterial({ color: 0x808080 }); // Fallback gray material
+                }
             }
 
             const instancedHexMesh = new THREE.InstancedMesh(baseHexGeo, material, instances.length);

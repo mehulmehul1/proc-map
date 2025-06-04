@@ -1,14 +1,24 @@
-// setup.js
-import * as THREE from 'https://cdn.skypack.dev/three@0.137';
+// setup.ts
+import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-import { OrbitControls } from 'https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls';
-import { ACESFilmicToneMapping, sRGBEncoding, PCFSoftShadowMap, PMREMGenerator } from 'https://cdn.skypack.dev/three@0.137';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ACESFilmicToneMapping, sRGBEncoding, PCFSoftShadowMap, PMREMGenerator } from 'three';
 import {
-    PHYSICS_SOLVER_ITERATIONS, PHYSICS_SOLVER_TOLERANCE,
     FRICTION, RESTITUTION
-} from './config.ts';
+} from './config';
 
-export function initCore() {
+interface Core {
+    scene: THREE.Scene;
+    world: CANNON.World;
+    camera: THREE.PerspectiveCamera;
+    renderer: THREE.WebGLRenderer;
+    light: THREE.PointLight;
+    controls: OrbitControls;
+    pmrem: PMREMGenerator;
+    defaultMaterial: CANNON.Material;
+}
+
+export function initCore(): Core {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#FFEECC");
 
@@ -16,8 +26,6 @@ export function initCore() {
         gravity: new CANNON.Vec3(0, -9.82, 0),
     });
     world.allowSleep = true;
-    world.solver.iterations = PHYSICS_SOLVER_ITERATIONS;
-    world.solver.tolerance = PHYSICS_SOLVER_TOLERANCE;
 
     const defaultMaterial = new CANNON.Material("default");
     const defaultContactMaterial = new CANNON.ContactMaterial(
@@ -32,7 +40,7 @@ export function initCore() {
         }
     );
     world.defaultContactMaterial = defaultContactMaterial;
-    world.addContactMaterial(defaultContactMaterial); // Make sure it's added
+    world.addContactMaterial(defaultContactMaterial);
 
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(-25.5, 46.5, 49.5);
@@ -41,10 +49,9 @@ export function initCore() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMapping = ACESFilmicToneMapping;
     renderer.outputEncoding = sRGBEncoding;
-    renderer.physicallyCorrectLights = true;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFSoftShadowMap;
-    document.querySelector("#app").appendChild(renderer.domElement);
+    document.querySelector("#app")?.appendChild(renderer.domElement);
 
     const light = new THREE.PointLight(new THREE.Color("#FFCB8E").convertSRGBToLinear(), 80, 200);
     light.position.set(10, 20, 10);
@@ -62,16 +69,6 @@ export function initCore() {
 
     const pmrem = new PMREMGenerator(renderer);
     pmrem.compileEquirectangularShader();
-
-    // Ground plane for physics (if not using heightfield exclusively for ground)
-    // const groundBody = new CANNON.Body({
-    //   type: CANNON.Body.STATIC,
-    //   shape: new CANNON.Plane(),
-    //   material: defaultMaterial // Important for contact properties
-    // });
-    // groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-    // world.addBody(groundBody);
-
 
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
