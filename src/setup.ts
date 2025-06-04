@@ -79,8 +79,6 @@ export function initCore(): Core {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(20, 0, 20);
-    controls.dampingFactor = 0.05;
-    controls.enableDamping = true;
 
     const pmrem = new PMREMGenerator(renderer);
     pmrem.compileEquirectangularShader();
