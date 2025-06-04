@@ -47,8 +47,8 @@
         "24,25"
       ]
     },
-    "scz_cemetery_hill": {
-      "name": "Cemetery Hill",
+    "scz_cemetery_stone": {
+      "name": "Cemetery stone",
       "color_hint": "#FFD700",
       "all_hexes": [
         "34,28",
@@ -65,8 +65,8 @@
         "35,29"
       ]
     },
-    "scz_culps_hill": {
-      "name": "Culp's Hill",
+    "scz_culps_stone": {
+      "name": "Culp's stone",
       "color_hint": "#556B2F",
       "all_hexes": [
         "39,27",
@@ -437,7 +437,7 @@
     },
     {
       "coord": "35,0",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -797,7 +797,7 @@
     },
     {
       "coord": "35,1",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -1157,7 +1157,7 @@
     },
     {
       "coord": "35,2",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -1517,7 +1517,7 @@
     },
     {
       "coord": "35,3",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -1877,7 +1877,7 @@
     },
     {
       "coord": "35,4",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -2237,7 +2237,7 @@
     },
     {
       "coord": "35,5",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -2597,7 +2597,7 @@
     },
     {
       "coord": "35,6",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -2957,7 +2957,7 @@
     },
     {
       "coord": "35,7",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -3317,7 +3317,7 @@
     },
     {
       "coord": "35,8",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -3677,7 +3677,7 @@
     },
     {
       "coord": "35,9",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -3887,13 +3887,13 @@
     },
     {
       "coord": "10,10",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "11,10",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
@@ -3917,7 +3917,7 @@
     },
     {
       "coord": "15,10",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -4037,7 +4037,7 @@
     },
     {
       "coord": "35,10",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -4097,7 +4097,7 @@
     },
     {
       "coord": "45,10",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -4247,13 +4247,13 @@
     },
     {
       "coord": "10,11",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "11,11",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
@@ -4277,7 +4277,7 @@
     },
     {
       "coord": "15,11",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -4397,7 +4397,7 @@
     },
     {
       "coord": "35,11",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -4457,7 +4457,7 @@
     },
     {
       "coord": "45,11",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -4643,7 +4643,7 @@
     },
     {
       "coord": "16,12",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -4757,7 +4757,7 @@
     },
     {
       "coord": "35,12",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -4823,7 +4823,7 @@
     },
     {
       "coord": "46,12",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -5003,7 +5003,7 @@
     },
     {
       "coord": "16,13",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -5117,7 +5117,7 @@
     },
     {
       "coord": "35,13",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -5183,7 +5183,7 @@
     },
     {
       "coord": "46,13",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -5369,7 +5369,7 @@
     },
     {
       "coord": "17,14",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -5477,7 +5477,7 @@
     },
     {
       "coord": "35,14",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -5549,7 +5549,7 @@
     },
     {
       "coord": "47,14",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -5729,7 +5729,7 @@
     },
     {
       "coord": "17,15",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -5837,7 +5837,7 @@
     },
     {
       "coord": "35,15",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -5897,31 +5897,31 @@
     },
     {
       "coord": "45,15",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "46,15",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "47,15",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "48,15",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "49,15",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -6095,7 +6095,7 @@
     },
     {
       "coord": "18,16",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -6197,7 +6197,7 @@
     },
     {
       "coord": "35,16",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -6251,25 +6251,25 @@
     },
     {
       "coord": "44,16",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "45,16",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "46,16",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "47,16",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -6455,7 +6455,7 @@
     },
     {
       "coord": "18,17",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -6557,7 +6557,7 @@
     },
     {
       "coord": "35,17",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -6605,7 +6605,7 @@
     },
     {
       "coord": "43,17",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -6635,7 +6635,7 @@
     },
     {
       "coord": "48,17",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -6821,7 +6821,7 @@
     },
     {
       "coord": "19,18",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -6839,25 +6839,25 @@
     },
     {
       "coord": "22,18",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "23,18",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "24,18",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "25,18",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
@@ -6917,7 +6917,7 @@
     },
     {
       "coord": "35,18",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -6959,7 +6959,7 @@
     },
     {
       "coord": "42,18",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -6995,7 +6995,7 @@
     },
     {
       "coord": "48,18",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -7181,7 +7181,7 @@
     },
     {
       "coord": "19,19",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -7199,25 +7199,25 @@
     },
     {
       "coord": "22,19",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "23,19",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "24,19",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "25,19",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
@@ -7277,7 +7277,7 @@
     },
     {
       "coord": "35,19",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -7313,7 +7313,7 @@
     },
     {
       "coord": "41,19",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -7355,7 +7355,7 @@
     },
     {
       "coord": "48,19",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -7547,7 +7547,7 @@
     },
     {
       "coord": "20,20",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -7559,25 +7559,25 @@
     },
     {
       "coord": "22,20",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "23,20",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": "poi_mcpherson_farm"
     },
     {
       "coord": "24,20",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "25,20",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
@@ -7637,7 +7637,7 @@
     },
     {
       "coord": "35,20",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -7667,7 +7667,7 @@
     },
     {
       "coord": "40,20",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -7715,7 +7715,7 @@
     },
     {
       "coord": "48,20",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -7907,7 +7907,7 @@
     },
     {
       "coord": "20,21",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -7997,7 +7997,7 @@
     },
     {
       "coord": "35,21",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -8021,7 +8021,7 @@
     },
     {
       "coord": "39,21",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -8075,7 +8075,7 @@
     },
     {
       "coord": "48,21",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -8273,7 +8273,7 @@
     },
     {
       "coord": "21,22",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -8357,7 +8357,7 @@
     },
     {
       "coord": "35,22",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -8375,7 +8375,7 @@
     },
     {
       "coord": "38,22",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -8435,7 +8435,7 @@
     },
     {
       "coord": "48,22",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -8633,7 +8633,7 @@
     },
     {
       "coord": "21,23",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -8705,31 +8705,31 @@
     },
     {
       "coord": "33,23",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "34,23",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "35,23",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "36,23",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "37,23",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -8795,7 +8795,7 @@
     },
     {
       "coord": "48,23",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -8867,301 +8867,301 @@
     },
     {
       "coord": "0,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "1,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "2,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "3,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "4,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "5,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "6,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "7,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "8,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "9,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "10,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "11,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "12,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "13,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "14,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "15,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "16,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "17,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "18,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "19,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "20,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "21,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "22,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "23,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "24,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "25,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "26,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "27,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "28,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "29,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "30,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "31,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "32,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "33,24",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "34,24",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "35,24",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "36,24",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "37,24",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "38,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "39,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "40,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "41,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "42,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "43,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "44,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "45,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "46,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "47,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "48,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "49,24",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -9353,7 +9353,7 @@
     },
     {
       "coord": "21,25",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -9371,13 +9371,13 @@
     },
     {
       "coord": "24,25",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "25,25",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -9419,31 +9419,31 @@
     },
     {
       "coord": "32,25",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "33,25",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "34,25",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "35,25",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "36,25",
-      "terrain": "Urban",
+      "terrain": "stone",
       "elevation": 1,
       "landmark_id": null
     },
@@ -9515,7 +9515,7 @@
     },
     {
       "coord": "48,25",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -9713,7 +9713,7 @@
     },
     {
       "coord": "21,26",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -9731,13 +9731,13 @@
     },
     {
       "coord": "24,26",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "25,26",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -9773,7 +9773,7 @@
     },
     {
       "coord": "31,26",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -9791,7 +9791,7 @@
     },
     {
       "coord": "34,26",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -9875,7 +9875,7 @@
     },
     {
       "coord": "48,26",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -10067,7 +10067,7 @@
     },
     {
       "coord": "20,27",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -10127,7 +10127,7 @@
     },
     {
       "coord": "30,27",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -10145,7 +10145,7 @@
     },
     {
       "coord": "33,27",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -10175,31 +10175,31 @@
     },
     {
       "coord": "38,27",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "39,27",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "40,27",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "41,27",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "42,27",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
@@ -10229,7 +10229,7 @@
     },
     {
       "coord": "47,27",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -10427,7 +10427,7 @@
     },
     {
       "coord": "20,28",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -10481,7 +10481,7 @@
     },
     {
       "coord": "29,28",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -10505,25 +10505,25 @@
     },
     {
       "coord": "33,28",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "34,28",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "35,28",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "36,28",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
@@ -10535,31 +10535,31 @@
     },
     {
       "coord": "38,28",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "39,28",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "40,28",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "41,28",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "42,28",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
@@ -10589,7 +10589,7 @@
     },
     {
       "coord": "47,28",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -10787,7 +10787,7 @@
     },
     {
       "coord": "20,29",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -10835,7 +10835,7 @@
     },
     {
       "coord": "28,29",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -10859,7 +10859,7 @@
     },
     {
       "coord": "32,29",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -10871,55 +10871,55 @@
     },
     {
       "coord": "34,29",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "35,29",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "36,29",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": "poi_evergreen_cemetery_gate"
     },
     {
       "coord": "37,29",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "38,29",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
     {
       "coord": "39,29",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "40,29",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "41,29",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "42,29",
-      "terrain": "Forest",
+      "terrain": "grassNormal",
       "elevation": 1.1,
       "landmark_id": null
     },
@@ -10943,7 +10943,7 @@
     },
     {
       "coord": "46,29",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -11147,7 +11147,7 @@
     },
     {
       "coord": "20,30",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -11189,7 +11189,7 @@
     },
     {
       "coord": "27,30",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -11207,19 +11207,19 @@
     },
     {
       "coord": "30,30",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "31,30",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "32,30",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -11231,19 +11231,19 @@
     },
     {
       "coord": "34,30",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "35,30",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
     {
       "coord": "36,30",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2.5,
       "landmark_id": null
     },
@@ -11255,7 +11255,7 @@
     },
     {
       "coord": "38,30",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -11297,7 +11297,7 @@
     },
     {
       "coord": "45,30",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -11543,7 +11543,7 @@
     },
     {
       "coord": "26,31",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -11567,13 +11567,13 @@
     },
     {
       "coord": "30,31",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "31,31",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -11597,7 +11597,7 @@
     },
     {
       "coord": "35,31",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -11621,7 +11621,7 @@
     },
     {
       "coord": "39,31",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -11651,7 +11651,7 @@
     },
     {
       "coord": "44,31",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -11897,7 +11897,7 @@
     },
     {
       "coord": "25,32",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -11927,7 +11927,7 @@
     },
     {
       "coord": "30,32",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -11939,13 +11939,13 @@
     },
     {
       "coord": "32,32",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "33,32",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -11957,7 +11957,7 @@
     },
     {
       "coord": "35,32",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -11987,7 +11987,7 @@
     },
     {
       "coord": "40,32",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -12005,7 +12005,7 @@
     },
     {
       "coord": "43,32",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -12251,7 +12251,7 @@
     },
     {
       "coord": "24,33",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -12281,7 +12281,7 @@
     },
     {
       "coord": "29,33",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -12299,13 +12299,13 @@
     },
     {
       "coord": "32,33",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "33,33",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -12317,7 +12317,7 @@
     },
     {
       "coord": "35,33",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -12353,13 +12353,13 @@
     },
     {
       "coord": "41,33",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "42,33",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -12605,7 +12605,7 @@
     },
     {
       "coord": "23,34",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -12635,7 +12635,7 @@
     },
     {
       "coord": "28,34",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -12659,13 +12659,13 @@
     },
     {
       "coord": "32,34",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
     {
       "coord": "33,34",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -12677,7 +12677,7 @@
     },
     {
       "coord": "35,34",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -12713,13 +12713,13 @@
     },
     {
       "coord": "41,34",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
     {
       "coord": "42,34",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -12917,49 +12917,49 @@
     },
     {
       "coord": "15,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "16,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "17,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "18,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "19,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "20,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "21,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "22,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -12989,19 +12989,19 @@
     },
     {
       "coord": "27,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "28,35",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "29,35",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": "poi_codori_farm"
     },
@@ -13025,7 +13025,7 @@
     },
     {
       "coord": "33,35",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -13037,7 +13037,7 @@
     },
     {
       "coord": "35,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -13067,7 +13067,7 @@
     },
     {
       "coord": "40,35",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -13085,7 +13085,7 @@
     },
     {
       "coord": "43,35",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -13343,25 +13343,25 @@
     },
     {
       "coord": "26,36",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "27,36",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "28,36",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "29,36",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
@@ -13385,7 +13385,7 @@
     },
     {
       "coord": "33,36",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": "poi_the_angle"
     },
@@ -13397,7 +13397,7 @@
     },
     {
       "coord": "35,36",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -13421,7 +13421,7 @@
     },
     {
       "coord": "39,36",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -13451,7 +13451,7 @@
     },
     {
       "coord": "44,36",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -13697,7 +13697,7 @@
     },
     {
       "coord": "25,37",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -13709,19 +13709,19 @@
     },
     {
       "coord": "27,37",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "28,37",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": "poi_trostle_farm"
     },
     {
       "coord": "29,37",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
@@ -13745,7 +13745,7 @@
     },
     {
       "coord": "33,37",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -13757,7 +13757,7 @@
     },
     {
       "coord": "35,37",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -13817,7 +13817,7 @@
     },
     {
       "coord": "45,37",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -14051,7 +14051,7 @@
     },
     {
       "coord": "24,38",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -14105,7 +14105,7 @@
     },
     {
       "coord": "33,38",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -14117,7 +14117,7 @@
     },
     {
       "coord": "35,38",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -14183,7 +14183,7 @@
     },
     {
       "coord": "46,38",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -14405,19 +14405,19 @@
     },
     {
       "coord": "23,39",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "24,39",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "25,39",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
@@ -14459,7 +14459,7 @@
     },
     {
       "coord": "32,39",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -14477,7 +14477,7 @@
     },
     {
       "coord": "35,39",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -14549,19 +14549,19 @@
     },
     {
       "coord": "47,39",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "48,39",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "49,39",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -14759,31 +14759,31 @@
     },
     {
       "coord": "22,40",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "23,40",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "24,40",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "25,40",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "26,40",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
@@ -14801,7 +14801,7 @@
     },
     {
       "coord": "29,40",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -14819,7 +14819,7 @@
     },
     {
       "coord": "32,40",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -14837,7 +14837,7 @@
     },
     {
       "coord": "35,40",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -15131,19 +15131,19 @@
     },
     {
       "coord": "24,41",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "25,41",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
     {
       "coord": "26,41",
-      "terrain": "CultivatedField",
+      "terrain": "sand",
       "elevation": 1,
       "landmark_id": null
     },
@@ -15161,7 +15161,7 @@
     },
     {
       "coord": "29,41",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
@@ -15173,7 +15173,7 @@
     },
     {
       "coord": "31,41",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 2,
       "landmark_id": null
     },
@@ -15197,7 +15197,7 @@
     },
     {
       "coord": "35,41",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -15521,25 +15521,25 @@
     },
     {
       "coord": "29,42",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": "poi_bloody_run"
     },
     {
       "coord": "30,42",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3,
       "landmark_id": null
     },
     {
       "coord": "31,42",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3,
       "landmark_id": null
     },
     {
       "coord": "32,42",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3,
       "landmark_id": null
     },
@@ -15557,7 +15557,7 @@
     },
     {
       "coord": "35,42",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -15863,43 +15863,43 @@
     },
     {
       "coord": "26,43",
-      "terrain": "RoughGround",
+      "terrain": "dirt2",
       "elevation": 1.2,
       "landmark_id": null
     },
     {
       "coord": "27,43",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
     {
       "coord": "28,43",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 1.5,
       "landmark_id": null
     },
     {
       "coord": "29,43",
-      "terrain": "RoughGround",
+      "terrain": "dirt2",
       "elevation": 1.5,
       "landmark_id": null
     },
     {
       "coord": "30,43",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3,
       "landmark_id": null
     },
     {
       "coord": "31,43",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3,
       "landmark_id": null
     },
     {
       "coord": "32,43",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3,
       "landmark_id": null
     },
@@ -15917,7 +15917,7 @@
     },
     {
       "coord": "35,43",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -16223,43 +16223,43 @@
     },
     {
       "coord": "26,44",
-      "terrain": "RoughGround",
+      "terrain": "dirt2",
       "elevation": 1.2,
       "landmark_id": null
     },
     {
       "coord": "27,44",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 1.5,
       "landmark_id": null
     },
     {
       "coord": "28,44",
-      "terrain": "RoughGround",
+      "terrain": "dirt2",
       "elevation": 1.5,
       "landmark_id": null
     },
     {
       "coord": "29,44",
-      "terrain": "RoughGround",
+      "terrain": "dirt2",
       "elevation": 1.5,
       "landmark_id": null
     },
     {
       "coord": "30,44",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3,
       "landmark_id": null
     },
     {
       "coord": "31,44",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3,
       "landmark_id": null
     },
     {
       "coord": "32,44",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3,
       "landmark_id": null
     },
@@ -16277,7 +16277,7 @@
     },
     {
       "coord": "35,44",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -16589,37 +16589,37 @@
     },
     {
       "coord": "27,45",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
     {
       "coord": "28,45",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
     {
       "coord": "29,45",
-      "terrain": "RoughGround",
+      "terrain": "dirt2",
       "elevation": 1.2,
       "landmark_id": null
     },
     {
       "coord": "30,45",
-      "terrain": "RoughGround",
+      "terrain": "dirt2",
       "elevation": 1.2,
       "landmark_id": null
     },
     {
       "coord": "31,45",
-      "terrain": "RoughGround",
+      "terrain": "dirt2",
       "elevation": 1.2,
       "landmark_id": null
     },
     {
       "coord": "32,45",
-      "terrain": "RoughGround",
+      "terrain": "dirt2",
       "elevation": 1.2,
       "landmark_id": null
     },
@@ -16637,7 +16637,7 @@
     },
     {
       "coord": "35,45",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -16955,31 +16955,31 @@
     },
     {
       "coord": "28,46",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 0.5,
       "landmark_id": null
     },
     {
       "coord": "29,46",
-      "terrain": "River",
+      "terrain": "water",
       "elevation": 3.5,
       "landmark_id": null
     },
     {
       "coord": "30,46",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3.5,
       "landmark_id": null
     },
     {
       "coord": "31,46",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3.5,
       "landmark_id": null
     },
     {
       "coord": "32,46",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3.5,
       "landmark_id": null
     },
@@ -16997,7 +16997,7 @@
     },
     {
       "coord": "35,46",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -17321,25 +17321,25 @@
     },
     {
       "coord": "29,47",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3.5,
       "landmark_id": null
     },
     {
       "coord": "30,47",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3.5,
       "landmark_id": null
     },
     {
       "coord": "31,47",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3.5,
       "landmark_id": null
     },
     {
       "coord": "32,47",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3.5,
       "landmark_id": null
     },
@@ -17357,7 +17357,7 @@
     },
     {
       "coord": "35,47",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -17687,13 +17687,13 @@
     },
     {
       "coord": "30,48",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3.5,
       "landmark_id": null
     },
     {
       "coord": "31,48",
-      "terrain": "Hill",
+      "terrain": "stone",
       "elevation": 3.5,
       "landmark_id": null
     },
@@ -17717,7 +17717,7 @@
     },
     {
       "coord": "35,48",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
@@ -18077,7 +18077,7 @@
     },
     {
       "coord": "35,49",
-      "terrain": "Road",
+      "terrain": "dirt",
       "elevation": 1,
       "landmark_id": null
     },
