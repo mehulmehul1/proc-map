@@ -251,7 +251,7 @@ export function createMap(
                 // Draw transparent overlay for all_hexes (less opaque than key_hexes)
                 const shape = new THREE.Shape(corners.map((c: THREE.Vector2) => new THREE.Vector2(c.x, c.y)));
                 const overlayGeometry = new THREE.ShapeGeometry(shape);
-                const overlayMaterial = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.18, depthWrite: false });
+                const overlayMaterial = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false });
                 const overlayMesh = new THREE.Mesh(overlayGeometry, overlayMaterial);
                 overlayMesh.position.set(0, hex.baseHeight + 0.015, 0); // slightly above the hex
                 overlayMesh.frustumCulled = false;
@@ -267,7 +267,7 @@ export function createMap(
                 const shape = new THREE.Shape(corners.map((c: THREE.Vector2) => new THREE.Vector2(c.x, c.y)));
                 const geometry = new THREE.ShapeGeometry(shape);
                 geometry.translate(0, 0, 0); // already in world coords
-                const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.35, depthWrite: false });
+                const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false });
                 const mesh = new THREE.Mesh(geometry, material);
                 mesh.position.set(0, hex.baseHeight + 0.02, 0); // slightly above the hex
                 mesh.frustumCulled = false;
