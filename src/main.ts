@@ -63,6 +63,7 @@ const animationState: AnimationState = {
 async function main(): Promise<void> {
     core = initCore();
     assets = await loadAssets(core.pmrem);
+    (window as any).assets = assets; // Make assets globally available for interaction hover
 
     console.log(assets);
 
@@ -107,17 +108,17 @@ function animate(): void {
     allPhysicalSpheres.forEach(sphereObj => {
         let floorY = surfaceHeight;
         const currentHex = worldPointToHex(new THREE.Vector3(sphereObj.body.position.x, sphereObj.body.position.y, sphereObj.body.position.z), hexDataMap);
-   
+
         if (prevFloorY) {
             floorY = prevFloorY;
         }
         if (currentHex) {
             floorY = currentHex.baseHeight;
             prevFloorY = floorY;
-        } 
+        }
 
         const visualYMinimum = floorY + sphereRadius;
-      
+
         const sphereBodyPosition = sphereObj.body.position;
         sphereObj.mesh.position.y = sphereObj.mesh.position.y < visualYMinimum ? visualYMinimum : sphereObj.mesh.position.y;
         sphereBodyPosition.y = sphereBodyPosition.y < visualYMinimum ? visualYMinimum : sphereBodyPosition.y;
