@@ -2,27 +2,37 @@ import * as THREE from 'three';
 import { MeshPhysicalMaterial, Vector2, CylinderGeometry, SphereGeometry, BufferGeometry } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-// Cube coordinates to pixel position
+// Constants for hex grid geometry (pointy-top orientation)
+const HEX_SIZE = 1.0;  // Base size of hexagon
+const SQRT3 = Math.sqrt(3);
+
+// Cube coordinates to pixel position (pointy-top orientation)
 export function cubeToPosition(q: number, r: number): Vector2 {
-  const x = 1.77 * (q + r/2);  // Horizontal spacing
-  const y = 1.535 * r;         // Vertical spacing
+  const x = HEX_SIZE * (SQRT3 * q + SQRT3/2 * r);
+  const y = HEX_SIZE * (3/2 * r);
   return new Vector2(x, y);
 }
 
-// Pixel position to nearest cube coordinates
+// Pixel position to nearest cube coordinates (pointy-top orientation)
 export function positionToCube(x: number, y: number): { q: number; r: number; s: number } {
-  const r = y / 1.535;
-  const q = x / 1.77 - r/2;
+  // Convert pixel coordinates to axial coordinates
+  const q = (SQRT3/3 * x - 1/3 * y) / HEX_SIZE;
+  const r = (2/3 * y) / HEX_SIZE;
   const s = -q - r;  // s coordinate to satisfy q + r + s = 0
   
   // Round to nearest hex
-  let rq = Math.round(q);
-  let rr = Math.round(r);
-  let rs = Math.round(s);
+  return cubeRound({ q, r, s });
+}
+
+// Helper function to round floating point cube coordinates to valid hex coordinates
+function cubeRound(cube: { q: number; r: number; s: number }): { q: number; r: number; s: number } {
+  let rq = Math.round(cube.q);
+  let rr = Math.round(cube.r);
+  let rs = Math.round(cube.s);
   
-  const q_diff = Math.abs(rq - q);
-  const r_diff = Math.abs(rr - r);
-  const s_diff = Math.abs(rs - s);
+  const q_diff = Math.abs(rq - cube.q);
+  const r_diff = Math.abs(rr - cube.r);
+  const s_diff = Math.abs(rs - cube.s);
   
   if (q_diff > r_diff && q_diff > s_diff) {
     rq = -rr - rs;
