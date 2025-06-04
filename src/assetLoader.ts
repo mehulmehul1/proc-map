@@ -21,7 +21,7 @@ export async function loadAssets(pmrem: { fromEquirectangular: (arg0: THREE.Data
         stone: await new TextureLoader().loadAsync("assets/stone.png"),
     };
 
-    const mapDataResponse = await fetch("assets/gettysburg_map_data.json");
+    const mapDataResponse = await fetch("assets/gettysburg_map_data_cube_coords.json");
     const loadedMapData = await mapDataResponse.json();
 
     return { envmap, textures, loadedMapData };
