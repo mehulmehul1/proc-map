@@ -2,8 +2,9 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ACESFilmicToneMapping, PCFSoftShadowMap, PMREMGenerator } from 'three';
+import { ACESFilmicToneMapping, sRGBEncoding, PCFSoftShadowMap, PMREMGenerator } from 'three';
 import {
+    PHYSICS_SOLVER_ITERATIONS, PHYSICS_SOLVER_TOLERANCE,
     FRICTION, RESTITUTION
 } from './config';
 
@@ -14,7 +15,7 @@ interface Core {
     renderer: THREE.WebGLRenderer;
     light: THREE.PointLight;
     controls: OrbitControls;
-    pmrem: PMREMGenerator;
+    pmrem: THREE.PMREMGenerator;
     defaultMaterial: CANNON.Material;
 }
 
@@ -51,31 +52,17 @@ export function initCore(): Core {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFSoftShadowMap;
-    document.querySelector("#app")?.appendChild(renderer.domElement);
+    
+    const appElement = document.querySelector("#app");
+    if (!appElement) throw new Error("Could not find #app element");
+    appElement.appendChild(renderer.domElement);
 
-    // Main top light
-    const mainLight = new THREE.PointLight(new THREE.Color("#FFCB8E").convertSRGBToLinear(), 80, 200);
-    mainLight.position.set(10, 20, 10);
-    mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 512;
-    mainLight.shadow.mapSize.height = 512;
-    mainLight.shadow.camera.near = 0.5;
-    mainLight.shadow.camera.far = 500;
-    scene.add(mainLight);
-
-    // Additional directional light for more shadows
-    const dirLight = new THREE.DirectionalLight(new THREE.Color("#FFCB8E"), 0.5);
-    dirLight.position.set(20, 30, 20);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 512;
-    dirLight.shadow.mapSize.height = 512;
-    dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 500;
-    scene.add(dirLight);
-
-    // Ambient light for better overall visibility
-    const ambientLight = new THREE.AmbientLight(new THREE.Color("#404040"), 1);
-    scene.add(ambientLight);
+    const light = new THREE.PointLight(new THREE.Color("#FFCB8E").convertSRGBToLinear(), 1700, 8000);
+    light.position.set(10, 20, 10);
+    light.castShadow = true;
+    light.shadow.mapSize.width = 512;
+    light.shadow.mapSize.height = 512;
+    scene.add(light);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(20, 0, 20);
@@ -89,5 +76,5 @@ export function initCore(): Core {
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    return { scene, world, camera, renderer, light: mainLight, controls, pmrem, defaultMaterial };
+    return { scene, world, camera, renderer, light, controls, pmrem, defaultMaterial };
 }

@@ -43,11 +43,12 @@ export function createSpheres(
 
     const sphereGeometry = new THREE.SphereGeometry(sphereRadius);
     const baseSphereMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000, envMap: envmap });
-    const mainSphereMesh = new THREE.Mesh(sphereGeometry, baseSphereMaterial.clone());
-    mainSphereMesh.castShadow = true;
-    mainSphereMesh.receiveShadow = true;
-    scene.add(mainSphereMesh);
-    spheres.push({ body: sphereBody, mesh: mainSphereMesh, isPlayer: true });
+    const sphereMesh = new THREE.Mesh(sphereGeometry, baseSphereMaterial.clone());
+    sphereMesh.castShadow = true;
+    sphereMesh.receiveShadow = true;
+    sphereMesh.position.copy(sphereBody.position);
+    scene.add(sphereMesh);
+    spheres.push({ body: sphereBody, mesh: sphereMesh, isPlayer: true });
 
     // Additional Spheres
     for (let i = 0; i < NUM_ADDITIONAL_SPHERES; i++) {
@@ -80,6 +81,7 @@ export function createSpheres(
         mesh.material.color.setHex(Math.random() * 0xffffff);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+        mesh.position.copy(body.position);
         scene.add(mesh);
         spheres.push({ body, mesh, isPlayer: false });
     }
