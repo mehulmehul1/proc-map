@@ -1,10 +1,38 @@
-// utils.ts
 import * as THREE from 'three';
 import { MeshPhysicalMaterial, Vector2, CylinderGeometry, SphereGeometry, BufferGeometry } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-export function tileToPosition(tileX: number, tileY: number): Vector2 {
-  return new Vector2((tileX + (tileY % 2) * 0.5) * 1.77, tileY * 1.535);
+// Cube coordinates to pixel position
+export function cubeToPosition(q: number, r: number): Vector2 {
+  const x = 1.77 * (q + r/2);  // Horizontal spacing
+  const y = 1.535 * r;         // Vertical spacing
+  return new Vector2(x, y);
+}
+
+// Pixel position to nearest cube coordinates
+export function positionToCube(x: number, y: number): { q: number; r: number; s: number } {
+  const r = y / 1.535;
+  const q = x / 1.77 - r/2;
+  const s = -q - r;  // s coordinate to satisfy q + r + s = 0
+  
+  // Round to nearest hex
+  let rq = Math.round(q);
+  let rr = Math.round(r);
+  let rs = Math.round(s);
+  
+  const q_diff = Math.abs(rq - q);
+  const r_diff = Math.abs(rr - r);
+  const s_diff = Math.abs(rs - s);
+  
+  if (q_diff > r_diff && q_diff > s_diff) {
+    rq = -rr - rs;
+  } else if (r_diff > s_diff) {
+    rr = -rq - rs;
+  } else {
+    rs = -rq - rr;
+  }
+  
+  return { q: rq, r: rr, s: rs };
 }
 
 interface MaterialParams {
@@ -16,7 +44,6 @@ interface MaterialParams {
   normalScale?: THREE.Vector2;
 }
 
-// Material creation helper
 export function createHexMaterial(
   map: THREE.Texture, 
   envmap: THREE.Texture, 
@@ -40,7 +67,6 @@ interface Position {
   y: number;
 }
 
-// Decorative geometry functions
 export function treeGeometry(baseHeight: number, position: Position): BufferGeometry {
   const treeHeight = Math.random() * 1 + 1.25;
   const geo = new CylinderGeometry(0, 1.5, treeHeight, 3);
