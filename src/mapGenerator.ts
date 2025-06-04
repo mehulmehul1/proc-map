@@ -55,11 +55,8 @@ interface Textures {
     grassNormal?: THREE.Texture;
 }
 
-// Hex data storage, managed within this module or passed if needed elsewhere directly
 export const hexDataMap: Map<string, HexData> = new Map();
 export const allHexMeshes: THREE.InstancedMesh[] = [];
-
-// Store references to InstancedMesh objects by type
 export const instancedMeshes: { [key: string]: THREE.InstancedMesh } = {};
 
 export function createMap(
@@ -188,7 +185,8 @@ export function createMap(
         console.log("Heightfield added at", hfBody.position);
     }
 
-    const baseHexGeo = new THREE.CylinderGeometry(1, 1, 1, 6, 1, false);
+    // Double the hex radius (from 1 to 2)
+    const baseHexGeo = new THREE.CylinderGeometry(2, 2, 1, 6, 1, false);
 
     for (const type in groupedInstanceData) {
         const instances = groupedInstanceData[type];
@@ -206,7 +204,7 @@ export function createMap(
                 if (fallbackTexture) {
                     material = createHexMaterial(fallbackTexture, envmap);
                 } else {
-                    material = new THREE.MeshStandardMaterial({ color: 0x808080 }); // Fallback gray material
+                    material = new THREE.MeshStandardMaterial({ color: 0x808080 });
                 }
             }
 
@@ -227,49 +225,42 @@ export function createMap(
         }
     }
 
-    // --- Strategic Control Zones: Draw outlines and overlays ---
-    // Load zones from loadedMapData if present
     const zones = loadedMapData && loadedMapData.strategic_control_zones ? loadedMapData.strategic_control_zones : {};
-    // For each zone
     for (const zoneId in zones) {
         const zone = zones[zoneId];
         const color = zone.color_hint || '#FF00FF';
-        // Outlines for all_hexes
         if (zone.all_hexes) {
             for (const coord of zone.all_hexes) {
                 const hex = hexDataMap.get(coord);
                 if (!hex) continue;
-                // Draw outline
-                const corners = getHexCorners(hex.worldPos, 1); // radius 1
+                const corners = getHexCorners(hex.worldPos, 2); // Double radius to match new hex size
                 const points = corners.map((c: THREE.Vector2) => new THREE.Vector3(c.x, hex.baseHeight + 0.01, c.y));
-                points.push(points[0].clone()); // close the loop
+                points.push(points[0].clone());
                 const geometry = new THREE.BufferGeometry().setFromPoints(points);
                 const material = new THREE.LineBasicMaterial({ color, linewidth: 2 });
                 const line = new THREE.Line(geometry, material);
                 line.frustumCulled = false;
                 scene.add(line);
-                // Draw transparent overlay for all_hexes (less opaque than key_hexes)
                 const shape = new THREE.Shape(corners.map((c: THREE.Vector2) => new THREE.Vector2(c.x, c.y)));
                 const overlayGeometry = new THREE.ShapeGeometry(shape);
                 const overlayMaterial = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false });
                 const overlayMesh = new THREE.Mesh(overlayGeometry, overlayMaterial);
-                overlayMesh.position.set(0, hex.baseHeight + 0.015, 0); // slightly above the hex
+                overlayMesh.position.set(0, hex.baseHeight + 0.015, 0);
                 overlayMesh.frustumCulled = false;
                 scene.add(overlayMesh);
             }
         }
-        // Filled overlay for key_hexes (more opaque)
         if (zone.key_hexes) {
             for (const coord of zone.key_hexes) {
                 const hex = hexDataMap.get(coord);
                 if (!hex) continue;
-                const corners = getHexCorners(hex.worldPos, 1);
+                const corners = getHexCorners(hex.worldPos, 2); // Double radius to match new hex size
                 const shape = new THREE.Shape(corners.map((c: THREE.Vector2) => new THREE.Vector2(c.x, c.y)));
                 const geometry = new THREE.ShapeGeometry(shape);
-                geometry.translate(0, 0, 0); // already in world coords
+                geometry.translate(0, 0, 0);
                 const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false });
                 const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set(0, hex.baseHeight + 0.02, 0); // slightly above the hex
+                mesh.position.set(0, hex.baseHeight + 0.02, 0);
                 mesh.frustumCulled = false;
                 scene.add(mesh);
             }
@@ -277,8 +268,7 @@ export function createMap(
     }
 }
 
-// Returns the 6 corners of a hex centered at position (Vector2), with optional radius (default 1)
-function getHexCorners(position: THREE.Vector2, radius = 1): THREE.Vector2[] {
+function getHexCorners(position: THREE.Vector2, radius = 2): THREE.Vector2[] {
     const corners: THREE.Vector2[] = [];
     for (let i = 0; i < 6; i++) {
         const angle = Math.PI / 3 * i;
