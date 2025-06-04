@@ -3,7 +3,7 @@ import { MeshPhysicalMaterial, Vector2, CylinderGeometry, SphereGeometry, Buffer
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // Constants for hex grid geometry (pointy-top orientation)
-const HEX_SIZE = 1.0;  // Base size of hexagon
+const HEX_SIZE = 5.0;  // Base size of hexagon
 const SQRT3 = Math.sqrt(3);
 
 // Cube coordinates to pixel position (pointy-top orientation)
