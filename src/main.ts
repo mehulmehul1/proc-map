@@ -96,9 +96,9 @@ function animate(): void {
     }
     lastCallTime = time;
 
-    updateHexLiftAnimation(currentTimeMs, animationState, mapInstancedMeshes);
+    updateHexLiftAnimation(currentTimeMs, animationState);
     if (playerSphere) {
-        updateSpherePathAnimation(core.world, animationState, playerSphere.body, hexDataMap);
+        updateSpherePathAnimation(core.world, animationState, playerSphere.body);
     }
 
     const surfaceHeight = 3;
